@@ -1,7 +1,7 @@
 package com.booking.controller;
 
-import com.booking.entity.Admin;
-import com.booking.service.AdminService;
+import com.booking.entity.User;
+import com.booking.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +16,13 @@ import java.util.Optional;
 public class AdminController {
 
     @Autowired
-    private AdminService adminService;
+    private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerAdmin(@RequestBody Admin admin) {
+    public ResponseEntity<?> registerAdmin(@RequestBody User admin) {
         try {
-            Admin registeredAdmin = adminService.registerAdmin(admin);
+            admin.setRole(User.UserRole.ADMIN);
+            User registeredAdmin = userService.registerUser(admin);
             return ResponseEntity.ok(registeredAdmin);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -30,35 +31,37 @@ public class AdminController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginAdmin(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
+        String email = credentials.get("email");
         String password = credentials.get("password");
 
-        Optional<Admin> adminOpt = adminService.authenticateAdmin(username, password);
-        if (adminOpt.isPresent()) {
-            Admin admin = adminOpt.get();
+        Optional<User> adminOpt = userService.authenticateUser(email, password);
+        if (adminOpt.isPresent() && adminOpt.get().isAdmin()) {
+            User admin = adminOpt.get();
             Map<String, Object> response = new HashMap<>();
             response.put("id", admin.getId());
-            response.put("username", admin.getUsername());
             response.put("email", admin.getEmail());
             response.put("fullName", admin.getFullName());
             response.put("role", admin.getRole());
             return ResponseEntity.ok(response);
         }
-        return ResponseEntity.badRequest().body("Invalid credentials");
+        return ResponseEntity.badRequest().body("Invalid credentials or not an admin");
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getAdmin(@PathVariable Long id) {
-        Optional<Admin> admin = adminService.getAdminById(id);
-        return admin.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<User> admin = userService.getUserById(id);
+        if (admin.isPresent() && admin.get().isAdmin()) {
+            return ResponseEntity.ok(admin.get());
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAdmin(@PathVariable Long id, @RequestBody Admin admin) {
+    public ResponseEntity<?> updateAdmin(@PathVariable Long id, @RequestBody User admin) {
         admin.setId(id);
+        admin.setRole(User.UserRole.ADMIN);
         try {
-            Admin updatedAdmin = adminService.updateAdmin(admin);
+            User updatedAdmin = userService.updateUser(admin);
             return ResponseEntity.ok(updatedAdmin);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -68,7 +71,7 @@ public class AdminController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAdmin(@PathVariable Long id) {
         try {
-            adminService.deleteAdmin(id);
+            userService.deleteUser(id);
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

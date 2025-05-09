@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,7 +19,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public User registerUser(User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
+        if (userRepository.existsByFullName(user.getFullName())) {
             throw new RuntimeException("Username already exists");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
@@ -29,8 +30,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Optional<User> authenticateUser(String username, String password) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+    public Optional<User> authenticateUser(String fullName, String password) {
+        Optional<User> userOpt = userRepository.findByFullName(fullName);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (passwordEncoder.matches(password, user.getPassword())) {
@@ -44,8 +45,16 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public Optional<User> getUserByFullName(String fullName) {
+        return userRepository.findByFullName(fullName);
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     public User updateUser(User user) {

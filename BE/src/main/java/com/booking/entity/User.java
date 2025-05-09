@@ -13,30 +13,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username;
-
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String fullName;
 
     @Column(nullable = false)
-    private boolean enabled = true;
+    private boolean enabled = false;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role = "USER"; // USER or ADMIN
-
-    // Additional user-specific fields
-    @Column
-    private String phoneNumber;
+    private UserRole role = UserRole.USER;
 
     @Column
-    private String address;
+    private String phoneNumber = "";
+
+    @Column
+    private String address = "";
 
     @ManyToMany
     @JoinTable(
@@ -45,4 +42,13 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "event_id")
     )
     private Set<Event> bookedEvents = new HashSet<>();
+
+    public enum UserRole {
+        USER,
+        ADMIN
+    }
+
+    public boolean isAdmin() {
+        return this.role == UserRole.ADMIN;
+    }
 } 

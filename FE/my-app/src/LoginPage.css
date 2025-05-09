@@ -1,8 +1,8 @@
 .login-container {
-  min-height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   padding: 20px;
 }
@@ -21,6 +21,26 @@
   color: #1f2937;
   margin-bottom: 2rem;
   font-size: 1.8rem;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.success-message {
+  background-color: #dcfce7;
+  color: #16a34a;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .form-group {
@@ -86,6 +106,56 @@
 .switch-btn:hover {
   color: #4338ca;
   text-decoration: underline;
+}
+
+/* Phone Input Styles */
+.phone-input-container {
+  width: 100% !important;
+}
+
+.phone-input {
+  width: 100% !important;
+  height: 42px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px !important;
+  font-size: 1rem !important;
+  transition: border-color 0.2s !important;
+}
+
+.phone-input:focus {
+  outline: none !important;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+}
+
+.phone-input-button {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 6px 0 0 6px !important;
+  background-color: #f8f9fa !important;
+}
+
+.phone-input-button:hover {
+  background-color: #e9ecef !important;
+}
+
+/* Country dropdown styles */
+.country-list {
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.country-list .country {
+  padding: 8px 10px !important;
+}
+
+.country-list .country:hover {
+  background-color: #f8f9fa !important;
+}
+
+.country-list .country.highlight {
+  background-color: #e9ecef !important;
 }
 
 @media (max-width: 480px) {

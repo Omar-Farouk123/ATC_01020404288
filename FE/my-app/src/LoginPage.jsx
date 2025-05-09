@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import './LoginPage.css';
+import { registerUser, loginUser } from './services/api';
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -7,8 +10,12 @@ const LoginPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    name: ''
+    name: '',
+    address: '',
+    phoneNumber: ''
   });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,18 +25,47 @@ const LoginPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handlePhoneChange = (value) => {
+    setFormData(prevState => ({
+      ...prevState,
+      phoneNumber: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLogin) {
-      // Handle login
-      console.log('Login:', { email: formData.email, password: formData.password });
-    } else {
-      // Handle registration
-      if (formData.password !== formData.confirmPassword) {
-        alert('Passwords do not match!');
-        return;
+    setError('');
+    setSuccess('');
+
+    try {
+      if (isLogin) {
+        // Handle login
+        const response = await loginUser({
+          email: formData.email,
+          password: formData.password
+        });
+        setSuccess('Login successful!');
+        console.log('Login successful:', response);
+        // Here you can handle the successful login (e.g., save token, redirect)
+      } else {
+        // Handle registration
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match!');
+          return;
+        }
+        const response = await registerUser(formData);
+        setSuccess('Registration successful! Please wait for admin approval.');
+        console.log('Registration successful:', response);
+        // Optionally switch to login view after successful registration
+        setIsLogin(true);
       }
-      console.log('Register:', formData);
+    } catch (err) {
+      if (err === 'Account is not activated yet. Please wait for admin approval.') {
+        setError('Your account is not activated yet. Please wait for admin approval.');
+      } else {
+        setError(err.toString());
+      }
+      console.error('Error:', err);
     }
   };
 
@@ -37,20 +73,51 @@ const LoginPage = () => {
     <div className="login-container">
       <div className="login-box">
         <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
         <form onSubmit={handleSubmit}>
           {!isLogin && (
-            <div className="form-group">
-              <label htmlFor="name">Full Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="Enter your full name"
-              />
-            </div>
+            <>
+              <div className="form-group">
+                <label htmlFor="name">Full Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="phoneNumber">Phone Number</label>
+                <PhoneInput
+                  country={'us'}
+                  value={formData.phoneNumber}
+                  onChange={handlePhoneChange}
+                  inputProps={{
+                    name: 'phoneNumber',
+                    required: false,
+                    placeholder: 'Enter your phone number'
+                  }}
+                  containerClass="phone-input-container"
+                  inputClass="phone-input"
+                  buttonClass="phone-input-button"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="address">Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Enter your address"
+                />
+              </div>
+            </>
           )}
           
           <div className="form-group">
@@ -105,7 +172,11 @@ const LoginPage = () => {
             <button
               type="button"
               className="switch-btn"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+                setSuccess('');
+              }}
             >
               {isLogin ? 'Register' : 'Login'}
             </button>

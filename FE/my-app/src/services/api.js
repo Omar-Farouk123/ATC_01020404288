@@ -1,0 +1,37 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8080/api';
+
+const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+export const registerUser = async (userData) => {
+    try {
+        const response = await api.post('/users/register', {
+            fullName: userData.name,
+            email: userData.email,
+            password: userData.password,
+            phoneNumber: userData.phoneNumber,
+            address: userData.address
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+export const loginUser = async (credentials) => {
+    try {
+        const response = await api.post('/users/login', {
+            email: credentials.email,
+            password: credentials.password
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+}; 

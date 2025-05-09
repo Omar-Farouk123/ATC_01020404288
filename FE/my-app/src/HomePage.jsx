@@ -1,21 +1,22 @@
-import React, { useEffect } from 'react';
-import './HomePage.css';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import './HomePage.css';
 
 const HomePage = () => {
-  useEffect(() => {
-    document.title = 'Home | Booking System';  // ← Your custom title
-  }, []);
-
   return (
     <div className="container">
       {/* Hero Section */}
       <section className="hero">
         <h1>Book Your Perfect Experience</h1>
         <p>Find and book the best services in your area</p>
-        <Link to="/login" className="cta-button">
-          Get Started
-        </Link>
+        <div className="hero-buttons">
+          <Link to="/login" className="cta-button">
+            Get Started
+          </Link>
+          <Link to="/events" className="cta-button secondary">
+            See Events
+          </Link>
+        </div>
       </section>
 
       {/* Features Section */}
@@ -66,9 +67,14 @@ const HomePage = () => {
       <section className="hero">
         <h2>Ready to Get Started?</h2>
         <p>Join thousands of satisfied customers today</p>
-        <Link to="/login" className="cta-button">
-          Book Now
-        </Link>
+        <div className="hero-buttons">
+          <Link to="/login" className="cta-button">
+            Book Now
+          </Link>
+          <Link to="/events" className="cta-button secondary">
+            Browse Events
+          </Link>
+        </div>
       </section>
     </div>
   );

@@ -1,9 +1,12 @@
 package com.booking.controller;
 
+import com.booking.dto.UserRegistrationRequest;
 import com.booking.entity.User;
 import com.booking.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -18,9 +21,21 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationRequest request) {
         try {
+            User user = new User();
+            user.setFullName(request.getFullName());
+            user.setEmail(request.getEmail());
+            user.setPassword(passwordEncoder.encode(request.getPassword())); // Encode password
+            user.setPhoneNumber(request.getPhoneNumber());
+            user.setAddress(request.getAddress());
+            user.setRole(User.UserRole.USER); // Set default role
+            user.setEnabled(false); // Set enabled to false by default
+            
             User registeredUser = userService.registerUser(user);
             return ResponseEntity.ok(registeredUser);
         } catch (RuntimeException e) {
@@ -30,15 +45,25 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
+        String email = credentials.get("email");
         String password = credentials.get("password");
 
-        Optional<User> userOpt = userService.authenticateUser(username, password);
+        Optional<User> userOpt = userService.getUserByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+            
+            // Check if password matches
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                return ResponseEntity.badRequest().body("Invalid credentials");
+            }
+            
+            // Check if account is enabled
+            if (!user.isEnabled()) {
+                return ResponseEntity.status(403).body("Account is not activated yet. Please wait for admin approval.");
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
-            response.put("username", user.getUsername());
             response.put("email", user.getEmail());
             response.put("fullName", user.getFullName());
             response.put("role", user.getRole());
