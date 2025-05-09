@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
-import { useLocation, useNavigationType } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 // Configure NProgress
 NProgress.configure({
@@ -13,7 +13,6 @@ NProgress.configure({
 
 const LoadingBar = () => {
   const location = useLocation();
-  const navigationType = useNavigationType();
 
   useEffect(() => {
     // Start the loading bar
