@@ -1,0 +1,39 @@
+/* Customize the loading bar color and height */
+#nprogress .bar {
+  background: #4f46e5 !important; /* Match our theme color */
+  height: 8px !important;
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Optional: Customize the loading bar's shadow */
+#nprogress .bar {
+  box-shadow: 0 0 30px #4f46e5, 0 0 5px #4f46e5;
+}
+
+/* Optional: Customize the loading bar's animation */
+#nprogress .bar {
+  transition: all 0.3s ease;
+}
+
+/* Optional: Add a subtle glow effect */
+#nprogress .bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(79, 70, 229, 0.2) 0%,
+    rgba(79, 70, 229, 0.4) 50%,
+    rgba(79, 70, 229, 0.2) 100%
+  );
+  animation: glow 1.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+} 
