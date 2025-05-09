@@ -16,10 +16,10 @@ const Events = () => {
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-    if (token) {
-      // Get user details from token or API
-      const userDetails = JSON.parse(localStorage.getItem('user'));
+    const userDetails = JSON.parse(localStorage.getItem('user'));
+    
+    if (token && userDetails) {
+      setIsLoggedIn(true);
       setUser(userDetails);
     }
 
@@ -106,29 +106,36 @@ const Events = () => {
       {/* Sidebar */}
       <div className="sidebar">
         <div className="sidebar-header">
-          <Link to="/" className="home-button">
+          <Link to="/" className="nav-button home-button">
             <i className="fas fa-home"></i>
             Home
           </Link>
-          <h2>Events</h2>
         </div>
+        
         {isLoggedIn ? (
           <div className="user-section">
             <div className="user-info">
-              <i className="fas fa-user-circle"></i>
-              <div>
-                <h3>{user?.fullName}</h3>
+              <div className="user-avatar">
+                <i className="fas fa-user-circle"></i>
+              </div>
+              <div className="user-details">
+                <h3>{user?.fullName || 'Guest'}</h3>
                 <p>{user?.email}</p>
               </div>
             </div>
+            
             <nav className="sidebar-nav">
-              <Link to="/profile" className="nav-link">
-                <i className="fas fa-user"></i>
-                Profile
+              <Link to="/settings" className="nav-link">
+                <i className="fas fa-cog"></i>
+                Settings
               </Link>
-              <Link to="/bookings" className="nav-link">
+              <Link to="/booked-events" className="nav-link">
                 <i className="fas fa-calendar-check"></i>
-                My Bookings
+                Booked Events
+              </Link>
+              <Link to="/statistics" className="nav-link">
+                <i className="fas fa-chart-bar"></i>
+                Statistics
               </Link>
               <button onClick={handleLogout} className="nav-link logout">
                 <i className="fas fa-sign-out-alt"></i>
@@ -152,6 +159,11 @@ const Events = () => {
 
       {/* Main Content */}
       <div className="events-container">
+        <div className="events-header">
+          <h1>Book your Events today</h1>
+          <p>Discover and book amazing events in your area</p>
+        </div>
+
         <div className="search-filter-container">
           <div className="search-box">
             <i className="fas fa-search"></i>
@@ -225,6 +237,43 @@ const Events = () => {
           )}
         </div>
       </div>
+
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-section">
+            <h3>Quick Links</h3>
+            <ul>
+              <li><Link to="/faq">How to Book</Link></li>
+              <li><Link to="/faq">Cancellation Policy</Link></li>
+              <li><Link to="/faq">Refund Policy</Link></li>
+              <li><Link to="/faq">Terms & Conditions</Link></li>
+            </ul>
+          </div>
+          
+          <div className="footer-section">
+            <h3>Contact Us</h3>
+            <ul>
+              <li><i className="fas fa-envelope"></i> support@eventbooking.com</li>
+              <li><i className="fas fa-phone"></i> +1 (555) 123-4567</li>
+              <li><i className="fas fa-map-marker-alt"></i> 123 Event Street, City, Country</li>
+            </ul>
+          </div>
+          
+          <div className="footer-section">
+            <h3>Follow Us</h3>
+            <div className="social-links">
+              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook"></i></a>
+              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-twitter"></i></a>
+              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
+              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin"></i></a>
+            </div>
+          </div>
+        </div>
+        
+        <div className="footer-bottom">
+          <p>&copy; 2024 Event Booking System. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };

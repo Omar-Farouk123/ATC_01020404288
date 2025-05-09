@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import './LoginPage.css';
-import { registerUser, loginUser } from './services/api';
+import { registerUser, loginUser } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -36,6 +39,7 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setIsLoading(true);
 
     try {
       if (isLogin) {
@@ -44,13 +48,27 @@ const LoginPage = () => {
           email: formData.email,
           password: formData.password
         });
+        
+        // Store user data and token in localStorage
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify({
+          fullName: response.fullName,
+          email: response.email,
+          id: response.id
+        }));
+        
         setSuccess('Login successful!');
         console.log('Login successful:', response);
-        // Here you can handle the successful login (e.g., save token, redirect)
+        
+        // Wait for 1 second before navigating
+        setTimeout(() => {
+          navigate('/events');
+        }, 1000);
       } else {
         // Handle registration
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match!');
+          setIsLoading(false);
           return;
         }
         const response = await registerUser(formData);
@@ -58,6 +76,7 @@ const LoginPage = () => {
         console.log('Registration successful:', response);
         // Optionally switch to login view after successful registration
         setIsLogin(true);
+        setIsLoading(false);
       }
     } catch (err) {
       if (err === 'Account is not activated yet. Please wait for admin approval.') {
@@ -66,11 +85,26 @@ const LoginPage = () => {
         setError(err.toString());
       }
       console.error('Error:', err);
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="login-container">
+      <div className="header-bar">
+        <div className="header-title">
+          <h1>Login!</h1>
+          <span className="exclamation-mark">!</span>
+        </div>
+        <div className="header-buttons">
+          <Link to="/" className="nav-button home-button">
+            <i className="fas fa-home"></i> Home
+          </Link>
+          <Link to="/events" className="nav-button events-button">
+            <i className="fas fa-calendar-alt"></i> Events
+          </Link>
+        </div>
+      </div>
       <div className="login-box">
         <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         {error && <div className="error-message">{error}</div>}
@@ -161,8 +195,14 @@ const LoginPage = () => {
             </div>
           )}
 
-          <button type="submit" className="submit-btn">
-            {isLogin ? 'Login' : 'Register'}
+          <button type="submit" className="submit-btn" disabled={isLoading}>
+            {isLoading ? (
+              <span className="loading-spinner">
+                <i className="fas fa-spinner fa-spin"></i> Loading...
+              </span>
+            ) : (
+              isLogin ? 'Login' : 'Register'
+            )}
           </button>
         </form>
 

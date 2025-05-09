@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './HomePage';
-import LoginPage from './LoginPage';
-import Events from './components/Events';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import Events from './pages/Events';
 import LoadingBar from './components/LoadingBar';
 import './components/LoadingBar.css';
 import './App.css';
