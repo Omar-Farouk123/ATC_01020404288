@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import './Events.css';
+import '../pages/Events.css';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -12,6 +12,7 @@ const Events = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today', 'week', 'month'
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in
@@ -104,12 +105,22 @@ const Events = () => {
       )}
 
       {/* Sidebar */}
-      <div className="sidebar">
+      <div className={`sidebar ${isSidebarExpanded ? 'expanded' : 'collapsed'}`}>
         <div className="sidebar-header">
-          <Link to="/" className="nav-button home-button">
-            <i className="fas fa-home"></i>
-            Home
-          </Link>
+          <div className="header-buttons">
+            <button 
+              className="toggle-sidebar"
+              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+            >
+              <i className={`fas ${isSidebarExpanded ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
+            </button>
+            {isSidebarExpanded && (
+              <Link to="/" className="nav-button home-button">
+                <i className="fas fa-home"></i>
+                Home
+              </Link>
+            )}
+          </div>
         </div>
         
         {isLoggedIn ? (
@@ -118,47 +129,49 @@ const Events = () => {
               <div className="user-avatar">
                 <i className="fas fa-user-circle"></i>
               </div>
-              <div className="user-details">
-                <h3>{user?.fullName || 'Guest'}</h3>
-                <p>{user?.email}</p>
-              </div>
+              {isSidebarExpanded && (
+                <div className="user-details">
+                  <h3>{user?.fullName || 'Guest'}</h3>
+                  <p>{user?.email}</p>
+                </div>
+              )}
             </div>
             
             <nav className="sidebar-nav">
-              <Link to="/settings" className="nav-link">
+              <Link to="/settings" className="nav-link" title="Settings">
                 <i className="fas fa-cog"></i>
-                Settings
+                {isSidebarExpanded && <span>Settings</span>}
               </Link>
-              <Link to="/booked-events" className="nav-link">
+              <Link to="/booked-events" className="nav-link" title="Booked Events">
                 <i className="fas fa-calendar-check"></i>
-                Booked Events
+                {isSidebarExpanded && <span>Booked Events</span>}
               </Link>
-              <Link to="/statistics" className="nav-link">
+              <Link to="/statistics" className="nav-link" title="Statistics">
                 <i className="fas fa-chart-bar"></i>
-                Statistics
+                {isSidebarExpanded && <span>Statistics</span>}
               </Link>
-              <button onClick={handleLogout} className="nav-link logout">
+              <button onClick={handleLogout} className="nav-link logout" title="Logout">
                 <i className="fas fa-sign-out-alt"></i>
-                Logout
+                {isSidebarExpanded && <span>Logout</span>}
               </button>
             </nav>
           </div>
         ) : (
           <div className="auth-buttons">
-            <Link to="/login" className="auth-button">
+            <Link to="/login" className="auth-button" title="Login">
               <i className="fas fa-sign-in-alt"></i>
-              Login
+              {isSidebarExpanded && <span>Login</span>}
             </Link>
-            <Link to="/register" className="auth-button">
+            <Link to="/register" className="auth-button" title="Register">
               <i className="fas fa-user-plus"></i>
-              Register
+              {isSidebarExpanded && <span>Register</span>}
             </Link>
           </div>
         )}
       </div>
 
       {/* Main Content */}
-      <div className="events-container">
+      <div className={`events-container ${!isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="events-header">
           <h1>Book your Events today</h1>
           <p>Discover and book amazing events in your area</p>
@@ -238,7 +251,7 @@ const Events = () => {
         </div>
       </div>
 
-      <footer className="footer">
+      <footer className={`footer ${!isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="footer-content">
           <div className="footer-section">
             <h3>Quick Links</h3>

@@ -57,7 +57,8 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify({
           fullName: response.fullName,
           email: response.email,
-          id: response.id
+          id: response.id,
+          role: response.role
         }));
         localStorage.setItem('tokenExpiry', expiryTime.toString());
         
@@ -66,7 +67,12 @@ const LoginPage = () => {
         
         // Wait for 1 second before navigating
         setTimeout(() => {
-          navigate('/events');
+          // Navigate based on user role
+          if (response.role === 'ADMIN') {
+            navigate('/admin');
+          } else {
+            navigate('/events');
+          }
         }, 1000);
       } else {
         // Handle registration

@@ -1,68 +1,20 @@
-package com.booking.entity;
+package com.booking.dto;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "events")
-public class Event {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+public class EventCreateDTO {
     private String name;
-
-    @Column(length = 1000)
     private String description;
-
-    @Column(nullable = false)
     private LocalDate date;
-
-    @Column(nullable = false)
     private LocalTime time;
-
-    @Column(nullable = false)
     private String location;
-
-    @Column(nullable = false)
     private BigDecimal price;
-
-    @Column(nullable = false)
     private String category;
-
-    @Column(nullable = false)
     private Integer availableTickets;
 
-    @ManyToMany(mappedBy = "bookedEvents")
-    private Set<User> registeredUsers = new HashSet<>();
-
-    @Column(nullable = false)
-    private boolean active = true;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        availableTickets = availableTickets;
-    }
-
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
     }

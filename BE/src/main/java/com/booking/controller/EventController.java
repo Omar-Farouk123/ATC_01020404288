@@ -1,5 +1,6 @@
 package com.booking.controller;
 
+import com.booking.dto.EventCreateDTO;
 import com.booking.entity.Event;
 import com.booking.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +11,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000")
 public class EventController {
 
     @Autowired
     private EventService eventService;
+
+    @PostMapping
+    public ResponseEntity<Event> createEvent(@RequestBody EventCreateDTO eventDTO) {
+        Event createdEvent = eventService.createEvent(eventDTO);
+        return ResponseEntity.ok(createdEvent);
+    }
 
     @GetMapping
     public ResponseEntity<List<Event>> getAllEvents() {
@@ -22,15 +29,10 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEvent(@PathVariable Long id) {
+    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
         return eventService.getEventById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
-        return ResponseEntity.ok(eventService.createEvent(event));
     }
 
     @PutMapping("/{id}")
