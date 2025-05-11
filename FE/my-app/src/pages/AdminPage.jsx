@@ -1,17 +1,88 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaHome, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaBars } from 'react-icons/fa';
+import { FaBars, FaHome, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import axios from 'axios';
 import './AdminPage.css';
 
 const AdminPage = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUser(userData);
+    }
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/events');
+      setEvents(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch events. Please try again later.');
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
     navigate('/login');
   };
+
+  const isEventInDateRange = (eventDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const eventDateTime = new Date(eventDate);
+    eventDateTime.setHours(0, 0, 0, 0);
+
+    switch (dateFilter) {
+      case 'today':
+        return eventDateTime.getTime() === today.getTime();
+      case 'week':
+        const weekLater = new Date(today);
+        weekLater.setDate(today.getDate() + 7);
+        return eventDateTime >= today && eventDateTime <= weekLater;
+      case 'month':
+        const monthLater = new Date(today);
+        monthLater.setMonth(today.getMonth() + 1);
+        return eventDateTime >= today && eventDateTime <= monthLater;
+      default:
+        return true;
+    }
+  };
+
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
+    const matchesDate = isEventInDateRange(event.date);
+    return matchesSearch && matchesCategory && matchesDate;
+  });
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-bar"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
 
   return (
     <div className="admin-page">
@@ -25,45 +96,131 @@ const AdminPage = () => {
             >
               <FaBars />
             </button>
-            {isSidebarExpanded && (
-              <a href="/" className="home-btn">
-                <FaHome />
-              </a>
-            )}
           </div>
         </div>
-
-        <nav className="sidebar-nav">
-          <button className="nav-item">
-            <i><FaHome /></i>
-            {isSidebarExpanded && <span>Home</span>}
-          </button>
-          <button className="nav-item">
-            <i><FaCog /></i>
-            {isSidebarExpanded && <span>Settings</span>}
-          </button>
-          <button className="nav-item">
-            <i><FaUsers /></i>
-            {isSidebarExpanded && <span>Manage Users</span>}
-          </button>
-          <button className="nav-item">
-            <i><FaChartBar /></i>
-            {isSidebarExpanded && <span>Statistics</span>}
-          </button>
-          <button className="nav-item" onClick={handleLogout}>
-            <i><FaSignOutAlt /></i>
-            {isSidebarExpanded && <span>Logout</span>}
-          </button>
-        </nav>
+        
+        <div className="user-section">
+          <div className="user-info">
+            <div className="user-avatar">
+              <FaUser />
+            </div>
+            {isSidebarExpanded && (
+              <div className="user-details">
+                <h3>{user?.fullName || 'Guest'}</h3>
+                <p>{user?.email || 'Not logged in'}</p>
+              </div>
+            )}
+          </div>
+          
+          <nav className="sidebar-nav">
+            <button className="nav-item">
+              <FaHome />
+              {isSidebarExpanded && <span>Home</span>}
+            </button>
+            <button className="nav-item">
+              <FaCog />
+              {isSidebarExpanded && <span>Settings</span>}
+            </button>
+            <button className="nav-item">
+              <FaUsers />
+              {isSidebarExpanded && <span>Manage Users</span>}
+            </button>
+            <button className="nav-item">
+              <FaChartBar />
+              {isSidebarExpanded && <span>Statistics</span>}
+            </button>
+            <button onClick={handleLogout} className="nav-item logout">
+              <FaSignOutAlt />
+              {isSidebarExpanded && <span>Logout</span>}
+            </button>
+          </nav>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className={`main-content ${isSidebarExpanded ? 'expanded' : ''}`}>
+      <div className={`main-content ${!isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="content-header">
           <h1>Admin Dashboard</h1>
+          <p className="dashboard-subtitle">Manage your events and users from one place</p>
+          <div className="header-actions">
+            <button className="action-button add-event">
+              <i className="fas fa-plus"></i>
+              Add New Event
+            </button>
+            <button className="action-button manage-users">
+              <i className="fas fa-users"></i>
+              Manage Users
+            </button>
+          </div>
         </div>
-        <div className="dashboard-content">
-          <p>Welcome to the admin dashboard. Use the sidebar to navigate through different sections.</p>
+
+        <div className="search-filter-container">
+          <div className="search-box">
+            <i className="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Search events by name or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="filters-group">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="category-filter"
+            >
+              <option value="all">All Categories</option>
+              <option value="concert">Concerts</option>
+              <option value="sports">Sports</option>
+              <option value="theater">Theater</option>
+              <option value="exhibition">Exhibitions</option>
+            </select>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="date-filter"
+            >
+              <option value="all">All Dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="events-grid">
+          {filteredEvents.length === 0 ? (
+            <div className="no-events-message">
+              <i className="fas fa-calendar-times"></i>
+              <p>No events found matching your criteria</p>
+            </div>
+          ) : (
+            filteredEvents.map((event) => (
+              <div key={event.id} className="event-card">
+                <div className="event-image">
+                  <img src={event.imageUrl} alt={event.name} />
+                </div>
+                <div className="event-details">
+                  <h3>{event.name}</h3>
+                  <div className="event-info">
+                    <span><i className="fas fa-calendar"></i> {new Date(event.date).toLocaleDateString()}</span>
+                    <span><i className="fas fa-clock"></i> {event.time}</span>
+                  </div>
+                  <div className="event-location">
+                    <i className="fas fa-map-marker-alt"></i> {event.location}
+                  </div>
+                  <p className="event-description">{event.description}</p>
+                  <div className="event-footer">
+                    <span className="event-price">${event.price}</span>
+                    <button className="book-button">
+                      Edit Event
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
