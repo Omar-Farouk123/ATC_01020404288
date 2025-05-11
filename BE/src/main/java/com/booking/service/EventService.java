@@ -1,12 +1,13 @@
 package com.booking.service;
 
-import com.booking.dto.EventCreateDTO;
 import com.booking.entity.Event;
 import com.booking.repository.EventRepository;
+import com.booking.dto.EventCreateDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,7 +28,9 @@ public class EventService {
         event.setPrice(eventDTO.getPrice());
         event.setCategory(eventDTO.getCategory());
         event.setAvailableTickets(eventDTO.getAvailableTickets());
-
+        event.setActive(true);
+        event.setCreatedAt(LocalDateTime.now());
+        
         return eventRepository.save(event);
     }
 

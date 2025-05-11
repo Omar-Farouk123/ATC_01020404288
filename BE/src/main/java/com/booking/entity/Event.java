@@ -39,19 +39,18 @@ public class Event {
     @Column(nullable = false)
     private Integer availableTickets;
 
-    @ManyToMany(mappedBy = "bookedEvents")
-    private Set<User> registeredUsers = new HashSet<>();
-
     @Column(nullable = false)
     private boolean active = true;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @ManyToMany(mappedBy = "bookedEvents")
+    private Set<User> registeredUsers = new HashSet<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        availableTickets = availableTickets;
     }
 
     // Getters and Setters
@@ -125,5 +124,29 @@ public class Event {
 
     public void setAvailableTickets(Integer availableTickets) {
         this.availableTickets = availableTickets;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Set<User> getRegisteredUsers() {
+        return registeredUsers;
+    }
+
+    public void setRegisteredUsers(Set<User> registeredUsers) {
+        this.registeredUsers = registeredUsers;
     }
 } 

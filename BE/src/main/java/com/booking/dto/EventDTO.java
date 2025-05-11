@@ -1,46 +1,22 @@
 package com.booking.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-public class EventCreateDTO {
-    @NotBlank(message = "Name is required")
-    @Size(min = 3, max = 100, message = "Name must be between 3 and 100 characters")
+public class EventDTO {
     private String name;
-
-    @NotBlank(message = "Description is required")
-    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
-
-    @NotNull(message = "Date is required")
     private LocalDate date;
-
-    @NotNull(message = "Time is required")
     private LocalTime time;
-
-    @NotBlank(message = "Location is required")
     private String location;
-
-    @NotNull(message = "Price is required")
-    @Positive(message = "Price must be positive")
     private BigDecimal price;
-
-    @NotBlank(message = "Category is required")
     private String category;
-
     private String imageUrl;
-
-    @NotNull(message = "Available tickets is required")
-    @Positive(message = "Available tickets must be positive")
     private Integer availableTickets;
 
     // Default constructor
-    public EventCreateDTO() {
+    public EventDTO() {
     }
 
     // Getters and Setters

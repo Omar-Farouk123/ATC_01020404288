@@ -127,7 +127,7 @@ const LoginPage = () => {
     <div className="login-container">
       <div className="header-bar">
         <div className="header-title">
-          <h1>Login!</h1>
+          <h1>Login</h1>
           <span className="exclamation-mark">!</span>
         </div>
         <div className="header-buttons">

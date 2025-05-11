@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaBars, FaHome, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { useNavigate, Link } from 'react-router-dom';
+import { FaBars, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import axios from 'axios';
+import AddEventForm from '../components/AddEventForm';
 import './AdminPage.css';
 
 const AdminPage = () => {
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,62 +14,59 @@ const AdminPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [user, setUser] = useState(null);
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user data from localStorage
+    // Get user data from localStorage and check token expiration
     const userData = JSON.parse(localStorage.getItem('user'));
-    if (userData) {
+    const tokenExpiry = localStorage.getItem('tokenExpiry');
+    
+    const isTokenExpired = tokenExpiry && new Date().getTime() > parseInt(tokenExpiry);
+    
+    if (userData && !isTokenExpired) {
       setUser(userData);
+    } else {
+      // Clear expired session
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('tokenExpiry');
+      navigate('/login');
     }
+    
     fetchEvents();
   }, []);
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/events');
+      const response = await axios.get('http://localhost:8080/api/events', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       setEvents(response.data);
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch events. Please try again later.');
       setLoading(false);
+      console.error('Error fetching events:', err);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
     navigate('/login');
   };
 
-  const isEventInDateRange = (eventDate) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const eventDateTime = new Date(eventDate);
-    eventDateTime.setHours(0, 0, 0, 0);
-
-    switch (dateFilter) {
-      case 'today':
-        return eventDateTime.getTime() === today.getTime();
-      case 'week':
-        const weekLater = new Date(today);
-        weekLater.setDate(today.getDate() + 7);
-        return eventDateTime >= today && eventDateTime <= weekLater;
-      case 'month':
-        const monthLater = new Date(today);
-        monthLater.setMonth(today.getMonth() + 1);
-        return eventDateTime >= today && eventDateTime <= monthLater;
-      default:
-        return true;
-    }
-  };
-
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
-    const matchesDate = isEventInDateRange(event.date);
+    const matchesDate = dateFilter === 'all' || 
+                       (dateFilter === 'upcoming' && new Date(event.date) > new Date()) ||
+                       (dateFilter === 'past' && new Date(event.date) < new Date());
     return matchesSearch && matchesCategory && matchesDate;
   });
 
@@ -78,10 +76,6 @@ const AdminPage = () => {
         <div className="loading-bar"></div>
       </div>
     );
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
   }
 
   return (
@@ -99,13 +93,15 @@ const AdminPage = () => {
           </div>
         </div>
         
-        <div className="user-section">
-          <div className="user-info">
-            <div className="user-avatar">
-              <FaUser />
-            </div>
+        <div className="sidebar-user-section">
+          <div className="sidebar-user-info">
+            {!isSidebarExpanded && (
+              <div className="sidebar-user-avatar">
+                <FaUser />
+              </div>
+            )}
             {isSidebarExpanded && (
-              <div className="user-details">
+              <div className="sidebar-user-details">
                 <h3>{user?.fullName || 'Guest'}</h3>
                 <p>{user?.email || 'Not logged in'}</p>
               </div>
@@ -114,17 +110,13 @@ const AdminPage = () => {
           
           <nav className="sidebar-nav">
             <button className="nav-item">
-              <FaHome />
-              {isSidebarExpanded && <span>Home</span>}
-            </button>
-            <button className="nav-item">
               <FaCog />
               {isSidebarExpanded && <span>Settings</span>}
             </button>
-            <button className="nav-item">
+            <Link to="/admin/users" className="nav-item">
               <FaUsers />
               {isSidebarExpanded && <span>Manage Users</span>}
-            </button>
+            </Link>
             <button className="nav-item">
               <FaChartBar />
               {isSidebarExpanded && <span>Statistics</span>}
@@ -141,17 +133,19 @@ const AdminPage = () => {
       <div className={`main-content ${!isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="content-header">
           <h1>Admin Dashboard</h1>
-          <p className="dashboard-subtitle">Manage your events and users from one place</p>
-          <div className="header-actions">
-            <button className="action-button add-event">
-              <i className="fas fa-plus"></i>
-              Add New Event
-            </button>
-            <button className="action-button manage-users">
-              <i className="fas fa-users"></i>
-              Manage Users
-            </button>
-          </div>
+          <p className="dashboard-subtitle">Manage your events and users</p>
+        </div>
+
+        <div className="header-actions">
+          <button 
+            className="add-event-btn"
+            onClick={() => setIsAddEventModalOpen(true)}
+          >
+            Add New Event
+          </button>
+          <Link to="/admin/users" className="manage-users-btn">
+            Manage Users
+          </Link>
         </div>
 
         <div className="search-filter-container">
@@ -159,70 +153,65 @@ const AdminPage = () => {
             <i className="fas fa-search"></i>
             <input
               type="text"
-              placeholder="Search events by name or description..."
+              placeholder="Search events..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="filters-group">
-            <select
-              value={selectedCategory}
+          <div className="filter-options">
+            <select 
+              value={selectedCategory} 
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="category-filter"
             >
               <option value="all">All Categories</option>
-              <option value="concert">Concerts</option>
               <option value="sports">Sports</option>
-              <option value="theater">Theater</option>
-              <option value="exhibition">Exhibitions</option>
+              <option value="music">Music</option>
+              <option value="arts">Arts</option>
+              <option value="food">Food</option>
             </select>
-            <select
-              value={dateFilter}
+            <select 
+              value={dateFilter} 
               onChange={(e) => setDateFilter(e.target.value)}
-              className="date-filter"
             >
               <option value="all">All Dates</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="past">Past</option>
             </select>
           </div>
         </div>
 
-        <div className="events-grid">
+        {error && <div className="error-message">{error}</div>}
+
+        <div className="events-list">
           {filteredEvents.length === 0 ? (
-            <div className="no-events-message">
-              <i className="fas fa-calendar-times"></i>
-              <p>No events found matching your criteria</p>
-            </div>
+            <div className="no-events">No events found</div>
           ) : (
-            filteredEvents.map((event) => (
+            filteredEvents.map(event => (
               <div key={event.id} className="event-card">
-                <div className="event-image">
-                  <img src={event.imageUrl} alt={event.name} />
+                <div className="event-info">
+                  <h3>{event.title}</h3>
+                  <p>{event.description}</p>
+                  <div className="event-details">
+                    <span className="event-category">{event.category}</span>
+                    <span className="event-date">{new Date(event.date).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <div className="event-details">
-                  <h3>{event.name}</h3>
-                  <div className="event-info">
-                    <span><i className="fas fa-calendar"></i> {new Date(event.date).toLocaleDateString()}</span>
-                    <span><i className="fas fa-clock"></i> {event.time}</span>
-                  </div>
-                  <div className="event-location">
-                    <i className="fas fa-map-marker-alt"></i> {event.location}
-                  </div>
-                  <p className="event-description">{event.description}</p>
-                  <div className="event-footer">
-                    <span className="event-price">${event.price}</span>
-                    <button className="book-button">
-                      Edit Event
-                    </button>
-                  </div>
+                <div className="event-actions">
+                  <button className="edit-btn">Edit</button>
+                  <button className="delete-btn">Delete</button>
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {isAddEventModalOpen && (
+        <AddEventForm 
+          onClose={() => setIsAddEventModalOpen(false)}
+          onEventAdded={fetchEvents}
+        />
+      )}
     </div>
   );
 };
