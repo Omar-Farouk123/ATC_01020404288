@@ -30,7 +30,7 @@ public class UserController {
             User user = new User();
             user.setFullName(request.getFullName());
             user.setEmail(request.getEmail());
-            user.setPassword(passwordEncoder.encode(request.getPassword())); // Encode password
+            user.setPassword(request.getPassword()); // Encode password
             user.setPhoneNumber(request.getPhoneNumber());
             user.setAddress(request.getAddress());
             user.setRole(User.UserRole.USER); // Set default role

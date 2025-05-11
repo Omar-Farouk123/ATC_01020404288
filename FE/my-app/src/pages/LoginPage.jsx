@@ -49,13 +49,17 @@ const LoginPage = () => {
           password: formData.password
         });
         
-        // Store user data and token in localStorage
+        // Set session expiration time (24 hours from now)
+        const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+        
+        // Store user data and token in localStorage with expiry
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify({
           fullName: response.fullName,
           email: response.email,
           id: response.id
         }));
+        localStorage.setItem('tokenExpiry', expiryTime.toString());
         
         setSuccess('Login successful!');
         console.log('Login successful:', response);
@@ -71,12 +75,35 @@ const LoginPage = () => {
           setIsLoading(false);
           return;
         }
-        const response = await registerUser(formData);
-        setSuccess('Registration successful! Please wait for admin approval.');
-        console.log('Registration successful:', response);
-        // Optionally switch to login view after successful registration
-        setIsLogin(true);
-        setIsLoading(false);
+
+        // Clear any existing form data
+        const registrationData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phoneNumber: formData.phoneNumber,
+          address: formData.address
+        };
+
+        const response = await registerUser(registrationData);
+        
+        if (response) {
+          setSuccess('Registration successful! Please wait for admin approval.');
+          console.log('Registration successful:', response);
+          
+          // Clear form data
+          setFormData({
+            email: '',
+            password: '',
+            confirmPassword: '',
+            name: '',
+            address: '',
+            phoneNumber: ''
+          });
+          
+          // Switch to login view after successful registration
+          setIsLogin(true);
+        }
       }
     } catch (err) {
       if (err === 'Account is not activated yet. Please wait for admin approval.') {
@@ -85,6 +112,7 @@ const LoginPage = () => {
         setError(err.toString());
       }
       console.error('Error:', err);
+    } finally {
       setIsLoading(false);
     }
   };

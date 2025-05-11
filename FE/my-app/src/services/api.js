@@ -18,9 +18,14 @@ export const registerUser = async (userData) => {
             phoneNumber: userData.phoneNumber,
             address: userData.address
         });
+        
+        // Return the full response data
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        if (error.response?.data) {
+            throw error.response.data;
+        }
+        throw error.message || 'Registration failed';
     }
 };
 
@@ -32,6 +37,9 @@ export const loginUser = async (credentials) => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data || error.message;
+        if (error.response?.data) {
+            throw error.response.data;
+        }
+        throw error.message || 'Login failed';
     }
 }; 
