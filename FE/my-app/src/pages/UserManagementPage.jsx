@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaBars, FaHome, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser } from 'react-icons/fa';
-import axios from 'axios';
+import { adminAPI } from '../services/api';
 import './UserManagementPage.css';
 
 const UserManagementPage = () => {
@@ -35,11 +35,7 @@ const UserManagementPage = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/users', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await adminAPI.getAllUsers();
       setUsers(response.data);
       setLoading(false);
     } catch (err) {
@@ -51,14 +47,7 @@ const UserManagementPage = () => {
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      await axios.put(`http://localhost:8080/api/users/${userId}/status`, 
-        { active: newStatus },
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
+      await adminAPI.updateUserStatus(userId, { active: newStatus });
       
       // Update the local state
       setUsers(users.map(user => 
@@ -187,10 +176,6 @@ const UserManagementPage = () => {
                       <div className="attribute">
                         <span className="attribute-label">Created:</span>
                         <span className="attribute-value">{new Date(user.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <div className="attribute">
-                        <span className="attribute-label">Last Login:</span>
-                        <span className="attribute-value">{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</span>
                       </div>
                     </div>
                     <span className={`user-role ${user.role.toLowerCase()}`}>

@@ -4,6 +4,7 @@ import com.booking.dto.UserRegistrationRequest;
 import com.booking.dto.UserStatusUpdateDTO;
 import com.booking.entity.User;
 import com.booking.service.UserService;
+import com.booking.service.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class UserController {
     private UserService userService;
 
     @Autowired
+    private AuthenticationService authenticationService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
@@ -32,11 +36,11 @@ public class UserController {
             User user = new User();
             user.setFullName(request.getFullName());
             user.setEmail(request.getEmail());
-            user.setPassword(request.getPassword()); // Encode password
+            user.setPassword(request.getPassword());
             user.setPhoneNumber(request.getPhoneNumber());
             user.setAddress(request.getAddress());
-            user.setRole(User.UserRole.USER); // Set default role
-            user.setEnabled(false); // Set enabled to false by default
+            user.setRole(User.UserRole.USER);
+            user.setEnabled(false);
             
             User registeredUser = userService.registerUser(user);
             return ResponseEntity.ok(registeredUser);
@@ -47,31 +51,15 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
-        String email = credentials.get("email");
-        String password = credentials.get("password");
+        try {
+            String email = credentials.get("email");
+            String password = credentials.get("password");
 
-        Optional<User> userOpt = userService.getUserByEmail(email);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            
-            // Check if password matches
-            if (!passwordEncoder.matches(password, user.getPassword())) {
-                return ResponseEntity.badRequest().body("Invalid credentials");
-            }
-            
-            // Check if account is enabled
-            if (!user.isEnabled()) {
-                return ResponseEntity.status(403).body("Account is not activated yet. Please wait for admin approval.");
-            }
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("fullName", user.getFullName());
-            response.put("role", user.getRole());
+            Map<String, Object> response = authenticationService.authenticate(email, password);
             return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid credentials");
         }
-        return ResponseEntity.badRequest().body("Invalid credentials");
     }
 
     @GetMapping("/{id}")
@@ -111,10 +99,18 @@ public class UserController {
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long id,
             @RequestBody UserStatusUpdateDTO statusUpdate) {
+        System.out.println("=== User Status Update Debug ===");
+        System.out.println("User ID: " + id);
+        System.out.println("Status Update Request: " + statusUpdate);
+        System.out.println("Active Status: " + statusUpdate.isActive());
+        
         try {
+            System.out.println("Calling userService.updateUserStatus...");
             userService.updateUserStatus(id, statusUpdate.isActive());
+            System.out.println("User status updated successfully");
             return ResponseEntity.ok().build();
         } catch (RuntimeException e) {
+            System.out.println("Error updating user status: " + e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

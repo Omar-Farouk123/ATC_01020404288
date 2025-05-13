@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { adminAPI } from '../services/api';
 import './AddEventForm.css';
 
 const AddEventForm = ({ onClose, onEventAdded }) => {
   const [formData, setFormData] = useState({
-    title: '',
+    name: '',
     description: '',
     date: '',
     time: '',
     location: '',
     category: '',
     price: '',
-    imageUrl: ''
+    imageUrl: '',
+    availableTickets: 100
   });
 
   const [error, setError] = useState(null);
@@ -31,16 +32,18 @@ const AddEventForm = ({ onClose, onEventAdded }) => {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:8080/api/events', formData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      // Format the data to match backend expectations
+      const formattedData = {
+        ...formData,
+        // Convert price to number
+        price: parseFloat(formData.price),
+        // Ensure availableTickets is a number
+        availableTickets: parseInt(formData.availableTickets, 10)
+      };
 
-      if (response.data) {
-        onEventAdded();
-        onClose();
-      }
+      await adminAPI.createEvent(formattedData);
+      onEventAdded();
+      onClose();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to add event. Please try again.');
     } finally {
@@ -60,15 +63,15 @@ const AddEventForm = ({ onClose, onEventAdded }) => {
 
         <form onSubmit={handleSubmit} className="add-event-form">
           <div className="form-group">
-            <label htmlFor="title">Event Title</label>
+            <label htmlFor="name">Event Name</label>
             <input
               type="text"
-              id="title"
-              name="title"
-              value={formData.title}
+              id="name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               required
-              placeholder="Enter event title"
+              placeholder="Enter event name"
             />
           </div>
 
@@ -168,6 +171,20 @@ const AddEventForm = ({ onClose, onEventAdded }) => {
               onChange={handleChange}
               required
               placeholder="Enter image URL"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="availableTickets">Available Tickets</label>
+            <input
+              type="number"
+              id="availableTickets"
+              name="availableTickets"
+              value={formData.availableTickets}
+              onChange={handleChange}
+              required
+              min="1"
+              placeholder="Enter number of available tickets"
             />
           </div>
 

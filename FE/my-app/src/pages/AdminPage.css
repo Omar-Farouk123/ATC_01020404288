@@ -6,23 +6,21 @@
 
 /* Sidebar Styles */
 .sidebar {
-  width: 280px;
-  background: white;
-  height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
-  padding: 1.5rem;
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
+  bottom: 0;
+  width: 280px;
+  background: #ffffff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.collapsed {
   width: 80px;
-  padding: 1.5rem 0.75rem;
 }
 
 .sidebar-header {
@@ -111,6 +109,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
 }
 
 .nav-item {
@@ -118,13 +118,21 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  width: 100%;
+  color: #4b5563;
+  text-decoration: none;
   border: none;
   background: none;
-  color: #6b7280;
-  cursor: pointer;
+  width: 220px;
+  border-radius: 8px;
   transition: all 0.2s;
-  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.sidebar.collapsed .nav-item {
+  width: 50px;
+  justify-content: center;
+  padding: 0.75rem;
 }
 
 .nav-item:hover {
@@ -133,7 +141,8 @@
 }
 
 .nav-item svg {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
+  min-width: 1.2rem;
 }
 
 .nav-item.logout {
@@ -304,18 +313,14 @@
 
 /* Event Card Styles */
 .event-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.event-card:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  gap: 20px;
 }
 
 .event-info {
@@ -323,37 +328,83 @@
 }
 
 .event-info h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.4rem;
 }
 
-.event-info p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
+.event-description {
+  color: #666;
+  margin-bottom: 15px;
+  line-height: 1.5;
 }
 
-.event-details {
+.event-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.detail-item {
   display: flex;
-  gap: 1rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 5px;
 }
 
-.event-category {
-  background: #e0f2fe;
-  color: #0284c7;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
+.detail-item.full-width {
+  grid-column: 1 / -1;
 }
 
-.event-date {
-  color: #6b7280;
+.detail-label {
+  font-weight: 600;
+  color: #555;
   font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #333;
+}
+
+.event-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.event-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.edit-btn, .delete-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.edit-btn {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #357abd;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
 }
 
 /* Search and Filter Styles */
@@ -431,24 +482,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
-}
-
-.event-image {
-  height: 200px;
-  overflow: hidden;
-}
-
-.event-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.event-description {
-  color: #4b5563;
-  font-size: 0.95rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
 }
 
 .event-location {

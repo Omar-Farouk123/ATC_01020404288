@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import './LoginPage.css';
-import { registerUser, loginUser } from '../services/api';
+import { authAPI } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
@@ -44,31 +44,29 @@ const LoginPage = () => {
     try {
       if (isLogin) {
         // Handle login
-        const response = await loginUser({
-          email: formData.email,
-          password: formData.password
-        });
+        const response = await authAPI.login(formData.email, formData.password);
+        const { token, role, id, email, fullName } = response.data;
         
         // Set session expiration time (24 hours from now)
         const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
         
         // Store user data and token in localStorage with expiry
-        localStorage.setItem('token', response.token);
+        localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify({
-          fullName: response.fullName,
-          email: response.email,
-          id: response.id,
-          role: response.role
+          id,
+          email,
+          fullName,
+          role
         }));
         localStorage.setItem('tokenExpiry', expiryTime.toString());
         
         setSuccess('Login successful!');
-        console.log('Login successful:', response);
+        console.log('Login successful:', response.data);
         
         // Wait for 1 second before navigating
         setTimeout(() => {
           // Navigate based on user role
-          if (response.role === 'ADMIN') {
+          if (role === 'ADMIN') {
             navigate('/admin');
           } else {
             navigate('/events');
@@ -82,20 +80,35 @@ const LoginPage = () => {
           return;
         }
 
-        // Clear any existing form data
+        // Prepare registration data
         const registrationData = {
-          name: formData.name,
+          fullName: formData.name,
           email: formData.email,
           password: formData.password,
           phoneNumber: formData.phoneNumber,
           address: formData.address
         };
 
-        const response = await registerUser(registrationData);
+        const response = await authAPI.register(registrationData);
         
-        if (response) {
+        if (response.data) {
+          const { token, role, id, email, fullName } = response.data;
+          
+          // Set session expiration time (24 hours from now)
+          const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
+          
+          // Store user data and token in localStorage with expiry
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify({
+            id,
+            email,
+            fullName,
+            role
+          }));
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+          
           setSuccess('Registration successful! Please wait for admin approval.');
-          console.log('Registration successful:', response);
+          console.log('Registration successful:', response.data);
           
           // Clear form data
           setFormData({
@@ -112,10 +125,10 @@ const LoginPage = () => {
         }
       }
     } catch (err) {
-      if (err === 'Account is not activated yet. Please wait for admin approval.') {
+      if (err.response?.data?.error === 'Account is not activated yet. Please wait for admin approval.') {
         setError('Your account is not activated yet. Please wait for admin approval.');
       } else {
-        setError(err.toString());
+        setError(err.response?.data?.error || 'An error occurred. Please try again.');
       }
       console.error('Error:', err);
     } finally {

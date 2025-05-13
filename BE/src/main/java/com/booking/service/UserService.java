@@ -5,6 +5,7 @@ import com.booking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +69,15 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    @Transactional
     public void updateUserStatus(Long id, boolean active) {
-        userRepository.updateStatus(id, active);
+        System.out.println("UserService - updateUserStatus called with id: " + id + ", active: " + active);
+        try {
+            userRepository.updateStatus(id, active);
+            System.out.println("UserService - Status update completed successfully");
+        } catch (Exception e) {
+            System.out.println("UserService - Error updating status: " + e.getMessage());
+            throw new RuntimeException("Failed to update user status: " + e.getMessage());
+        }
     }
 } 

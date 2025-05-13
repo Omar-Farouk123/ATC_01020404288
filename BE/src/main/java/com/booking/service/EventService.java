@@ -28,7 +28,6 @@ public class EventService {
         event.setPrice(eventDTO.getPrice());
         event.setCategory(eventDTO.getCategory());
         event.setAvailableTickets(eventDTO.getAvailableTickets());
-        event.setActive(true);
         event.setCreatedAt(LocalDateTime.now());
         
         return eventRepository.save(event);

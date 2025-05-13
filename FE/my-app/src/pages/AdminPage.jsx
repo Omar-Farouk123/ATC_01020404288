@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBars, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser } from 'react-icons/fa';
-import axios from 'axios';
+import { FaBars, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser, FaHome } from 'react-icons/fa';
+import { eventsAPI, adminAPI } from '../services/api';
 import AddEventForm from '../components/AddEventForm';
 import './AdminPage.css';
 
@@ -39,11 +39,7 @@ const AdminPage = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/events', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      const response = await eventsAPI.getAllEvents();
       setEvents(response.data);
       setLoading(false);
     } catch (err) {
@@ -60,9 +56,31 @@ const AdminPage = () => {
     navigate('/login');
   };
 
+  const handleDeleteEvent = async (eventId) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      try {
+        await adminAPI.deleteEvent(eventId);
+        await fetchEvents(); // Refresh the events list
+      } catch (err) {
+        setError('Failed to delete event. Please try again later.');
+        console.error('Error deleting event:', err);
+      }
+    }
+  };
+
+  const handleEditEvent = async (eventId, updatedData) => {
+    try {
+      await adminAPI.updateEvent(eventId, updatedData);
+      await fetchEvents(); // Refresh the events list
+    } catch (err) {
+      setError('Failed to update event. Please try again later.');
+      console.error('Error updating event:', err);
+    }
+  };
+
   const filteredEvents = events.filter(event => {
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
     const matchesDate = dateFilter === 'all' || 
                        (dateFilter === 'upcoming' && new Date(event.date) > new Date()) ||
@@ -109,6 +127,10 @@ const AdminPage = () => {
           </div>
           
           <nav className="sidebar-nav">
+            <Link to="/" className="nav-item">
+              <FaHome />
+              {isSidebarExpanded && <span>Home</span>}
+            </Link>
             <button className="nav-item">
               <FaCog />
               {isSidebarExpanded && <span>Settings</span>}
@@ -189,16 +211,54 @@ const AdminPage = () => {
             filteredEvents.map(event => (
               <div key={event.id} className="event-card">
                 <div className="event-info">
-                  <h3>{event.title}</h3>
-                  <p>{event.description}</p>
-                  <div className="event-details">
-                    <span className="event-category">{event.category}</span>
-                    <span className="event-date">{new Date(event.date).toLocaleDateString()}</span>
+                  <h3>{event.name}</h3>
+                  <p className="event-description">{event.description}</p>
+                  <div className="event-details-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">Category:</span>
+                      <span className="detail-value">{event.category}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Date:</span>
+                      <span className="detail-value">{new Date(event.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Time:</span>
+                      <span className="detail-value">{event.time}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Location:</span>
+                      <span className="detail-value">{event.location}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Price:</span>
+                      <span className="detail-value">${event.price}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Available Tickets:</span>
+                      <span className="detail-value">{event.availableTickets}</span>
+                    </div>
+                    {event.imageUrl && (
+                      <div className="detail-item full-width">
+                        <span className="detail-label">Image:</span>
+                        <img src={event.imageUrl} alt={event.name} className="event-image" />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="event-actions">
-                  <button className="edit-btn">Edit</button>
-                  <button className="delete-btn">Delete</button>
+                  <button 
+                    className="edit-btn"
+                    onClick={() => handleEditEvent(event.id, event)}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="delete-btn"
+                    onClick={() => handleDeleteEvent(event.id)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))

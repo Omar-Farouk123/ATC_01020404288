@@ -39,8 +39,7 @@ public class Event {
     @Column(nullable = false)
     private Integer availableTickets;
 
-    @Column(nullable = false)
-    private boolean active = true;
+
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -126,13 +125,7 @@ public class Event {
         this.availableTickets = availableTickets;
     }
 
-    public boolean isActive() {
-        return active;
-    }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

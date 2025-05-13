@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import AddEventForm from '../components/AddEventForm';
 import '../pages/Events.css';
 
 const Events = () => {
@@ -14,7 +13,6 @@ const Events = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today', 'week', 'month'
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
@@ -91,14 +89,6 @@ const Events = () => {
     const matchesDate = isEventInDateRange(event.date);
     return matchesSearch && matchesCategory && matchesDate;
   });
-
-  const handleAddEvent = () => {
-    setIsAddEventModalOpen(true);
-  };
-
-  const handleEventAdded = () => {
-    fetchEvents();
-  };
 
   if (loading) {
     return (
@@ -198,11 +188,6 @@ const Events = () => {
         <div className="events-header">
           <h1>Book your Events today</h1>
           <p>Discover and book amazing events in your area</p>
-          {isLoggedIn && (
-            <button className="add-event-btn" onClick={handleAddEvent}>
-              <i className="fas fa-plus"></i> Add New Event
-            </button>
-          )}
         </div>
 
         <div className="search-filter-container">
@@ -278,13 +263,6 @@ const Events = () => {
           )}
         </div>
       </div>
-
-      {isAddEventModalOpen && (
-        <AddEventForm 
-          onClose={() => setIsAddEventModalOpen(false)}
-          onEventAdded={handleEventAdded}
-        />
-      )}
 
       <footer className={`footer ${!isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="footer-content">
