@@ -9,19 +9,28 @@ const Events = () => {
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [bookedEventIds, setBookedEventIds] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today', 'week', 'month'
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [bookingStatus, setBookingStatus] = useState(null);
   const navigate = useNavigate();
 
   const fetchEvents = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('http://localhost:8080/api/events');
-      setEvents(response.data);
-      setLoading(false);
+      console.log('All events:', response.data);
+      setEvents(Array.isArray(response.data) ? response.data : []);
+      setError(null);
     } catch (err) {
+      console.error('Error fetching events:', err);
       setError('Failed to fetch events. Please try again later.');
+      setEvents([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -35,6 +44,7 @@ const Events = () => {
     const isTokenExpired = tokenExpiry && new Date().getTime() > parseInt(tokenExpiry);
     
     if (token && userDetails && !isTokenExpired) {
+      console.log('User is logged in:', userDetails);
       setIsLoggedIn(true);
       setUser(userDetails);
     } else {
@@ -48,7 +58,29 @@ const Events = () => {
 
     // Fetch events
     fetchEvents();
-  }, []);
+  }, []); // Remove dependencies to prevent infinite loop
+
+  // Separate useEffect for fetching booked events when user changes
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      const fetchBookedEvents = async () => {
+        try {
+          console.log('Fetching booked events for user:', user.id);
+          const bookedResponse = await axios.get(`http://localhost:8080/api/users/${user.id}/booked-events`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          console.log('Booked events response:', bookedResponse.data);
+          setBookedEventIds(new Set(bookedResponse.data));
+        } catch (err) {
+          console.error('Error fetching booked events:', err);
+          setBookedEventIds(new Set());
+        }
+      };
+      fetchBookedEvents();
+    }
+  }, [isLoggedIn, user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -82,13 +114,57 @@ const Events = () => {
     }
   };
 
-  const filteredEvents = events.filter(event => {
+  const filteredEvents = Array.isArray(events) ? events.filter(event => {
     const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
     const matchesDate = isEventInDateRange(event.date);
     return matchesSearch && matchesCategory && matchesDate;
-  });
+  }) : [];
+
+  const handleBookNow = (event) => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    setSelectedEvent(event);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmBooking = async () => {
+    try {
+      setBookingStatus('loading');
+      const response = await axios.post('http://localhost:8080/api/users/book-event', {
+        eventId: selectedEvent.id,
+        userId: user.id,
+        bookingDate: new Date().toISOString()
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      setBookingStatus('success');
+      // Refresh events to update available tickets
+      fetchEvents();
+      setTimeout(() => {
+        setShowConfirmation(false);
+        setBookingStatus(null);
+        setSelectedEvent(null);
+      }, 2000);
+    } catch (err) {
+      setBookingStatus('error');
+      setTimeout(() => {
+        setBookingStatus(null);
+      }, 3000);
+    }
+  };
+
+  const handleCancelBooking = () => {
+    setShowConfirmation(false);
+    setSelectedEvent(null);
+    setBookingStatus(null);
+  };
 
   if (loading) {
     return (
@@ -183,6 +259,54 @@ const Events = () => {
         )}
       </div>
 
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="modal-header">
+              <h2>Confirm Booking</h2>
+              <button className="close-button" onClick={handleCancelBooking}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-content">
+              <h3>{selectedEvent?.name}</h3>
+              <div className="event-details-confirm">
+                <p><i className="fas fa-calendar"></i> {new Date(selectedEvent?.date).toLocaleDateString()}</p>
+                <p><i className="fas fa-clock"></i> {selectedEvent?.time}</p>
+                <p><i className="fas fa-map-marker-alt"></i> {selectedEvent?.location}</p>
+                <p className="price">Price: ${selectedEvent?.price}</p>
+              </div>
+              {bookingStatus === 'loading' && (
+                <div className="booking-status loading">
+                  <i className="fas fa-spinner fa-spin"></i> Processing booking...
+                </div>
+              )}
+              {bookingStatus === 'success' && (
+                <div className="booking-status success">
+                  <i className="fas fa-check-circle"></i> Booking confirmed!
+                </div>
+              )}
+              {bookingStatus === 'error' && (
+                <div className="booking-status error">
+                  <i className="fas fa-exclamation-circle"></i> Failed to book event. Please try again.
+                </div>
+              )}
+              {!bookingStatus && (
+                <div className="modal-actions">
+                  <button className="cancel-button" onClick={handleCancelBooking}>
+                    Cancel
+                  </button>
+                  <button className="confirm-button" onClick={handleConfirmBooking}>
+                    Confirm Booking
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className={`events-container ${!isSidebarExpanded ? 'expanded' : ''}`}>
         <div className="events-header">
@@ -234,9 +358,11 @@ const Events = () => {
           ) : (
             filteredEvents.map((event) => (
               <div key={event.id} className="event-card">
-                <div className="event-image">
-                  <img src={event.imageUrl} alt={event.name} />
-                </div>
+                {bookedEventIds.has(event.id) && (
+                  <div className="booked-flag">
+                    <i className="fas fa-check-circle"></i> Booked
+                  </div>
+                )}
                 <div className="event-details">
                   <h3>{event.name}</h3>
                   <div className="event-info">
@@ -249,13 +375,16 @@ const Events = () => {
                   <p className="event-description">{event.description}</p>
                   <div className="event-footer">
                     <span className="event-price">${event.price}</span>
-                    <button 
-                      className={`book-button ${!isLoggedIn ? 'disabled' : ''}`}
-                      disabled={!isLoggedIn}
-                      title={!isLoggedIn ? "Please login to book events" : "Book this event"}
-                    >
-                      {isLoggedIn ? 'Book Now' : 'Login to Book'}
-                    </button>
+                    {!bookedEventIds.has(event.id) && (
+                      <button 
+                        className={`book-button ${!isLoggedIn ? 'disabled' : ''}`}
+                        disabled={!isLoggedIn}
+                        onClick={() => handleBookNow(event)}
+                        title={!isLoggedIn ? "Please login to book events" : "Book this event"}
+                      >
+                        {isLoggedIn ? 'Book Now' : 'Login to Book'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

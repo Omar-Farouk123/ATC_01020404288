@@ -2,6 +2,9 @@ package com.booking.service;
 
 import com.booking.entity.User;
 import com.booking.repository.UserRepository;
+import com.booking.repository.EventRepository;
+import com.booking.entity.Event;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,12 +12,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
+
+
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -79,5 +91,56 @@ public class UserService {
             System.out.println("UserService - Error updating status: " + e.getMessage());
             throw new RuntimeException("Failed to update user status: " + e.getMessage());
         }
+    }
+
+    @Transactional
+    public Map<String, Object> createBooking(Long userId, Long eventId, String bookingDate) {
+        // Validate user and event exist
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        // Check if user already has booked this event
+        if (user.getBookedEvents().contains(event)) {
+            throw new RuntimeException("You have already booked this event");
+        }
+
+        // Check if event has available tickets
+        if (event.getAvailableTickets() <= 0) {
+            throw new RuntimeException("No tickets available for this event");
+        }
+
+        // Add event to user's booked events
+        user.getBookedEvents().add(event);
+        
+        // Decrease available tickets
+        event.setAvailableTickets(event.getAvailableTickets() - 1);
+
+        // Save both user and event
+        userRepository.save(user);
+        eventRepository.save(event);
+
+        // Prepare response
+        Map<String, Object> response = new HashMap<>();
+        response.put("eventName", event.getName());
+        response.put("bookingDate", bookingDate);
+        response.put("availableTickets", event.getAvailableTickets());
+
+        return response;
+    }
+
+    public Set<Long> getUserBookedEventIds(Long userId) {
+        System.out.println("Getting booked events for user ID: " + userId);
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Set<Long> bookedEventIds = user.getBookedEvents().stream()
+            .map(Event::getId)
+            .collect(Collectors.toSet());
+        
+        System.out.println("User has booked events: " + bookedEventIds);
+        return bookedEventIds;
     }
 } 

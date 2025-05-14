@@ -40,7 +40,8 @@ const AdminPage = () => {
   const fetchEvents = async () => {
     try {
       const response = await eventsAPI.getAllEvents();
-      setEvents(response.data);
+      console.log('All events:', response.data);
+      setEvents(Array.isArray(response.data) ? response.data : []);
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch events. Please try again later.');

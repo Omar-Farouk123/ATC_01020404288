@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
@@ -112,6 +113,34 @@ public class UserController {
         } catch (RuntimeException e) {
             System.out.println("Error updating user status: " + e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/book-event")
+    public ResponseEntity<?> bookEvent(@RequestBody Map<String, Object> bookingRequest) {
+        try {
+            Long userId = Long.parseLong(bookingRequest.get("userId").toString());
+            Long eventId = Long.parseLong(bookingRequest.get("eventId").toString());
+            String bookingDate = bookingRequest.get("bookingDate").toString();
+
+            // Call service to create booking
+            Map<String, Object> booking = userService.createBooking(userId, eventId, bookingDate);
+            return ResponseEntity.ok(booking);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to book event: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/booked-events")
+    public ResponseEntity<?> getUserBookedEvents(@PathVariable Long id) {
+        try {
+            System.out.println("Fetching booked events for user ID: " + id);
+            Set<Long> bookedEventIds = userService.getUserBookedEventIds(id);
+            System.out.println("Found booked events: " + bookedEventIds);
+            return ResponseEntity.ok(bookedEventIds);
+        } catch (Exception e) {
+            System.out.println("Error fetching booked events: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Failed to fetch booked events: " + e.getMessage());
         }
     }
 } 
