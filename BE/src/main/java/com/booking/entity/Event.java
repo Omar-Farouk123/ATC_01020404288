@@ -1,6 +1,7 @@
 package com.booking.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -44,6 +45,7 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @JsonManagedReference
     @ManyToMany(mappedBy = "bookedEvents")
     private Set<User> registeredUsers = new HashSet<>();
 

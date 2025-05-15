@@ -2,6 +2,7 @@ package com.booking.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ public class User {
     @Column
     private String address = "";
 
+    @JsonBackReference
     @ManyToMany
     @JoinTable(
         name = "user_events",

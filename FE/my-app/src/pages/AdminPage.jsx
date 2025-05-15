@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaBars, FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser, FaHome } from 'react-icons/fa';
+import { FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser, FaHome } from 'react-icons/fa';
 import { eventsAPI, adminAPI } from '../services/api';
 import AddEventForm from '../components/AddEventForm';
 import './AdminPage.css';
 
 const AdminPage = () => {
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,81 +97,29 @@ const AdminPage = () => {
   }
 
   return (
-    <div className="admin-page">
-      {/* Sidebar */}
-      <div className={`sidebar ${isSidebarExpanded ? 'expanded' : 'collapsed'}`}>
-        <div className="sidebar-header">
-          <div className="header-buttons">
-            <button 
-              className="toggle-sidebar-btn"
-              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-            >
-              <FaBars />
-            </button>
+    <div className="admin-dashboard">
+      <div className="admin-content">
+        <div className="admin-header">
+          <div className="admin-header-content">
+            <h1>Admin Dashboard</h1>
+            <p>Manage your events and users</p>
           </div>
         </div>
-        
-        <div className="sidebar-user-section">
-          <div className="sidebar-user-info">
-            {!isSidebarExpanded && (
-              <div className="sidebar-user-avatar">
-                <FaUser />
-              </div>
-            )}
-            {isSidebarExpanded && (
-              <div className="sidebar-user-details">
-                <h3>{user?.fullName || 'Guest'}</h3>
-                <p>{user?.email || 'Not logged in'}</p>
-              </div>
-            )}
-          </div>
-          
-          <nav className="sidebar-nav">
-            <Link to="/" className="nav-item">
-              <FaHome />
-              {isSidebarExpanded && <span>Home</span>}
-            </Link>
-            <button className="nav-item">
-              <FaCog />
-              {isSidebarExpanded && <span>Settings</span>}
-            </button>
-            <Link to="/admin/users" className="nav-item">
-              <FaUsers />
-              {isSidebarExpanded && <span>Manage Users</span>}
-            </Link>
-            <button className="nav-item">
-              <FaChartBar />
-              {isSidebarExpanded && <span>Statistics</span>}
-            </button>
-            <button onClick={handleLogout} className="nav-item logout">
-              <FaSignOutAlt />
-              {isSidebarExpanded && <span>Logout</span>}
-            </button>
-          </nav>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className={`main-content ${!isSidebarExpanded ? 'expanded' : ''}`}>
-        <div className="content-header">
-          <h1>Admin Dashboard</h1>
-          <p className="dashboard-subtitle">Manage your events and users</p>
-        </div>
-
-        <div className="header-actions">
+        <div className="admin-actions">
           <button 
-            className="add-event-btn"
+            className="admin-btn add-event-btn"
             onClick={() => setIsAddEventModalOpen(true)}
           >
             Add New Event
           </button>
-          <Link to="/admin/users" className="manage-users-btn">
+          <Link to="/admin/users" className="admin-btn manage-users-btn">
             Manage Users
           </Link>
         </div>
 
-        <div className="search-filter-container">
-          <div className="search-box">
+        <div className="admin-search-filter">
+          <div className="admin-search-box">
             <i className="fas fa-search"></i>
             <input
               type="text"
@@ -181,8 +128,9 @@ const AdminPage = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="filter-options">
+          <div className="admin-filters">
             <select 
+              className="admin-filter-select"
               value={selectedCategory} 
               onChange={(e) => setSelectedCategory(e.target.value)}
             >
@@ -193,6 +141,7 @@ const AdminPage = () => {
               <option value="food">Food</option>
             </select>
             <select 
+              className="admin-filter-select"
               value={dateFilter} 
               onChange={(e) => setDateFilter(e.target.value)}
             >
@@ -205,61 +154,57 @@ const AdminPage = () => {
 
         {error && <div className="error-message">{error}</div>}
 
-        <div className="events-list">
+        <div className="admin-events-grid">
           {filteredEvents.length === 0 ? (
             <div className="no-events">No events found</div>
           ) : (
             filteredEvents.map(event => (
-              <div key={event.id} className="event-card">
-                <div className="event-info">
-                  <h3>{event.name}</h3>
-                  <p className="event-description">{event.description}</p>
-                  <div className="event-details-grid">
-                    <div className="detail-item">
-                      <span className="detail-label">Category:</span>
-                      <span className="detail-value">{event.category}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Date:</span>
-                      <span className="detail-value">{new Date(event.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Time:</span>
-                      <span className="detail-value">{event.time}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Location:</span>
-                      <span className="detail-value">{event.location}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Price:</span>
-                      <span className="detail-value">${event.price}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Available Tickets:</span>
-                      <span className="detail-value">{event.availableTickets}</span>
-                    </div>
-                    {event.imageUrl && (
-                      <div className="detail-item full-width">
-                        <span className="detail-label">Image:</span>
-                        <img src={event.imageUrl} alt={event.name} className="event-image" />
-                      </div>
-                    )}
+              <div key={event.id} className="admin-event-card">
+                <div className="admin-event-content">
+                  <div className="admin-event-header">
+                    <h3>{event.name}</h3>
+                    <p className="admin-event-description">{event.description}</p>
                   </div>
-                </div>
-                <div className="event-actions">
-                  <button 
-                    className="edit-btn"
-                    onClick={() => handleEditEvent(event.id, event)}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    className="delete-btn"
-                    onClick={() => handleDeleteEvent(event.id)}
-                  >
-                    Delete
-                  </button>
+                  <div className="admin-event-details">
+                    <div className="admin-event-detail">
+                      <span className="admin-event-label">Category</span>
+                      <span className="admin-event-value">{event.category}</span>
+                    </div>
+                    <div className="admin-event-detail">
+                      <span className="admin-event-label">Date</span>
+                      <span className="admin-event-value">{new Date(event.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="admin-event-detail">
+                      <span className="admin-event-label">Time</span>
+                      <span className="admin-event-value">{event.time}</span>
+                    </div>
+                    <div className="admin-event-detail">
+                      <span className="admin-event-label">Location</span>
+                      <span className="admin-event-value">{event.location}</span>
+                    </div>
+                    <div className="admin-event-detail">
+                      <span className="admin-event-label">Price</span>
+                      <span className="admin-event-value">${event.price}</span>
+                    </div>
+                    <div className="admin-event-detail">
+                      <span className="admin-event-label">Available Tickets</span>
+                      <span className="admin-event-value">{event.availableTickets}</span>
+                    </div>
+                  </div>
+                  <div className="admin-event-actions">
+                    <button 
+                      className="admin-action-btn edit-btn"
+                      onClick={() => handleEditEvent(event.id, event)}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="admin-action-btn delete-btn"
+                      onClick={() => handleDeleteEvent(event.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))

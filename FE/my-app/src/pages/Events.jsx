@@ -13,7 +13,6 @@ const Events = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today', 'week', 'month'
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [bookingStatus, setBookingStatus] = useState(null);
@@ -22,9 +21,29 @@ const Events = () => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8080/api/events');
-      console.log('All events:', response.data);
-      setEvents(Array.isArray(response.data) ? response.data : []);
+      const response = await axios.get('http://localhost:8080/api/events', {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      // Extract only the necessary event data, excluding registeredUsers
+      const cleanedEvents = response.data.map(event => ({
+        id: event.id,
+        name: event.name,
+        description: event.description,
+        date: event.date,
+        time: event.time,
+        location: event.location,
+        price: event.price,
+        category: event.category,
+        availableTickets: event.availableTickets,
+        createdAt: event.createdAt
+      }));
+      
+      console.log('Fetched events:', cleanedEvents); // Add logging
+      setEvents(cleanedEvents);
       setError(null);
     } catch (err) {
       console.error('Error fetching events:', err);
@@ -60,25 +79,25 @@ const Events = () => {
     fetchEvents();
   }, []); // Remove dependencies to prevent infinite loop
 
-  // Separate useEffect for fetching booked events when user changes
+  // Helper to fetch booked events
+  const fetchBookedEvents = async (userId) => {
+    try {
+      const bookedResponse = await axios.get(`http://localhost:8080/api/users/${userId}/booked-events`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      // Normalize IDs to numbers
+      setBookedEventIds(new Set((bookedResponse.data || []).map(id => Number(id))));
+    } catch (err) {
+      console.error('Error fetching booked events:', err);
+      setBookedEventIds(new Set());
+    }
+  };
+
   useEffect(() => {
     if (isLoggedIn && user) {
-      const fetchBookedEvents = async () => {
-        try {
-          console.log('Fetching booked events for user:', user.id);
-          const bookedResponse = await axios.get(`http://localhost:8080/api/users/${user.id}/booked-events`, {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-          console.log('Booked events response:', bookedResponse.data);
-          setBookedEventIds(new Set(bookedResponse.data));
-        } catch (err) {
-          console.error('Error fetching booked events:', err);
-          setBookedEventIds(new Set());
-        }
-      };
-      fetchBookedEvents();
+      fetchBookedEvents(user.id);
     }
   }, [isLoggedIn, user]);
 
@@ -143,10 +162,12 @@ const Events = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
       setBookingStatus('success');
-      // Refresh events to update available tickets
+      // Refresh events and booked events to update available tickets and booked flag
       fetchEvents();
+      if (isLoggedIn && user) {
+        await fetchBookedEvents(user.id);
+      }
       setTimeout(() => {
         setShowConfirmation(false);
         setBookingStatus(null);
@@ -193,70 +214,23 @@ const Events = () => {
         </div>
       )}
 
-      {/* Sidebar */}
-      <div className={`sidebar ${isSidebarExpanded ? 'expanded' : 'collapsed'}`}>
-        <div className="sidebar-header">
-          <div className="header-buttons">
-            <button 
-              className="toggle-sidebar"
-              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-            >
-              <i className={`fas ${isSidebarExpanded ? 'fa-chevron-left' : 'fa-chevron-right'}`}></i>
-            </button>
-            {isSidebarExpanded && (
-              <Link to="/" className="nav-button home-button">
-                <i className="fas fa-home"></i>
-                Home
-              </Link>
-            )}
-          </div>
+      {/* Header at the top of the page */}
+      <div className="events-header">
+        <div className="top-nav">
+          <Link to="/" className="nav-btn">
+            <i className="fas fa-home"></i> Home
+          </Link>
+          <Link to="/settings" className="nav-btn">
+            <i className="fas fa-cog"></i> Settings
+          </Link>
+          <button className="nav-btn" onClick={handleLogout}>
+            <i className="fas fa-sign-out-alt"></i> Logout
+          </button>
         </div>
-        
-        {isLoggedIn ? (
-          <div className="user-section">
-            {!isSidebarExpanded && (
-              <div className="user-info">
-                <div className="user-avatar">
-                  <i className="fas fa-user-circle"></i>
-                </div>
-                <div className="user-details">
-                  <h3>{user?.fullName || 'Guest'}</h3>
-                  <p>{user?.email}</p>
-                </div>
-              </div>
-            )}
-            
-            <nav className="sidebar-nav">
-              <Link to="/settings" className="nav-link" title="Settings">
-                <i className="fas fa-cog"></i>
-                {isSidebarExpanded && <span>Settings</span>}
-              </Link>
-              <Link to="/booked-events" className="nav-link" title="Booked Events">
-                <i className="fas fa-calendar-check"></i>
-                {isSidebarExpanded && <span>Booked Events</span>}
-              </Link>
-              <Link to="/statistics" className="nav-link" title="Statistics">
-                <i className="fas fa-chart-bar"></i>
-                {isSidebarExpanded && <span>Statistics</span>}
-              </Link>
-              <button onClick={handleLogout} className="nav-link logout" title="Logout">
-                <i className="fas fa-sign-out-alt"></i>
-                {isSidebarExpanded && <span>Logout</span>}
-              </button>
-            </nav>
-          </div>
-        ) : (
-          <div className="auth-buttons">
-            <Link to="/login" className="auth-button" title="Login">
-              <i className="fas fa-sign-in-alt"></i>
-              {isSidebarExpanded && <span>Login</span>}
-            </Link>
-            <Link to="/register" className="auth-button" title="Register">
-              <i className="fas fa-user-plus"></i>
-              {isSidebarExpanded && <span>Register</span>}
-            </Link>
-          </div>
-        )}
+        <div className="events-header-content">
+          <h1>Book your Events today</h1>
+          <p>Discover and book amazing events in your area</p>
+        </div>
       </div>
 
       {/* Confirmation Modal */}
@@ -308,12 +282,7 @@ const Events = () => {
       )}
 
       {/* Main Content */}
-      <div className={`events-container ${!isSidebarExpanded ? 'expanded' : ''}`}>
-        <div className="events-header">
-          <h1>Book your Events today</h1>
-          <p>Discover and book amazing events in your area</p>
-        </div>
-
+      <div className="events-container">
         <div className="search-filter-container">
           <div className="search-box">
             <i className="fas fa-search"></i>
@@ -393,7 +362,8 @@ const Events = () => {
         </div>
       </div>
 
-      <footer className={`footer ${!isSidebarExpanded ? 'expanded' : ''}`}>
+      {/* Footer at the bottom of the page */}
+      <footer className="footer">
         <div className="footer-content">
           <div className="footer-section">
             <h3>Quick Links</h3>

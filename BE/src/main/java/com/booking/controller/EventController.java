@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
-@CrossOrigin(origins = "http://localhost:3000")
 @Validated
 public class EventController {
     private static final Logger logger = LoggerFactory.getLogger(EventController.class);
@@ -36,8 +35,16 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents() {
-        return ResponseEntity.ok(eventService.getAllEvents());
+    public ResponseEntity<?> getAllEvents() {
+        try {
+            logger.info("Fetching all events");
+            List<Event> events = eventService.getAllEvents();
+            logger.info("Found {} events", events.size());
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            logger.error("Error fetching events: ", e);
+            return ResponseEntity.status(500).body("Error fetching events: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
