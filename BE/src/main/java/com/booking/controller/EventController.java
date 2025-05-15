@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -25,9 +27,24 @@ public class EventController {
     @PostMapping
     public ResponseEntity<?> createEvent(@Valid @RequestBody EventCreateDTO eventDTO) {
         try {
-            logger.info("Received event creation request: {}", eventDTO);
-            Event createdEvent = eventService.createEvent(eventDTO);
-            return ResponseEntity.ok(createdEvent);
+            // Validate date is not in the past
+            if (eventDTO.getDate().isBefore(LocalDate.now())) {
+                return ResponseEntity.badRequest().body("Event date cannot be in the past");
+            }
+
+            Event event = new Event();
+            event.setName(eventDTO.getName());
+            event.setDescription(eventDTO.getDescription());
+            event.setDate(eventDTO.getDate());
+            event.setTime(eventDTO.getTime());
+            event.setLocation(eventDTO.getLocation());
+            event.setPrice(eventDTO.getPrice());
+            event.setCategory(eventDTO.getCategory());
+            event.setAvailableTickets(eventDTO.getAvailableTickets());
+            event.setCreatedAt(LocalDateTime.now());
+
+            Event savedEvent = eventService.createEvent(eventDTO);
+            return ResponseEntity.ok(savedEvent);
         } catch (Exception e) {
             logger.error("Error creating event: ", e);
             return ResponseEntity.badRequest().body("Error creating event: " + e.getMessage());

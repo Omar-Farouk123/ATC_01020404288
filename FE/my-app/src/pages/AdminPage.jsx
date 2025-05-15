@@ -98,117 +98,135 @@ const AdminPage = () => {
 
   return (
     <div className="admin-dashboard">
+      <div className="admin-header">
+        <div className="admin-header-content">
+          <h1>Admin Dashboard</h1>
+          <p>Manage your events and users</p>
+        </div>
+      </div>
+
       <div className="admin-content">
-        <div className="admin-header">
-          <div className="admin-header-content">
-            <h1>Admin Dashboard</h1>
-            <p>Manage your events and users</p>
-          </div>
-        </div>
-
-        <div className="admin-actions">
-          <button 
-            className="admin-btn add-event-btn"
-            onClick={() => setIsAddEventModalOpen(true)}
-          >
-            Add New Event
-          </button>
-          <Link to="/admin/users" className="admin-btn manage-users-btn">
-            Manage Users
+        <div className="admin-nav">
+          <Link to="/" className="nav-btn">
+            <FaHome />
+            <span>Home</span>
           </Link>
+          <Link to="/admin" className="nav-btn active">
+            <FaChartBar />
+            <span>Dashboard</span>
+          </Link>
+          <Link to="/admin/users" className="nav-btn">
+            <FaUsers />
+            <span>Users</span>
+          </Link>
+          <button onClick={handleLogout} className="nav-btn logout">
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </button>
         </div>
 
-        <div className="admin-search-filter">
-          <div className="admin-search-box">
-            <i className="fas fa-search"></i>
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="admin-main">
+          <div className="admin-search-filter">
+            <div className="admin-search-box">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="admin-filters">
+              <select 
+                className="admin-filter-select"
+                value={selectedCategory} 
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option value="all">All Categories</option>
+                <option value="sports">Sports</option>
+                <option value="music">Music</option>
+                <option value="arts">Arts</option>
+                <option value="food">Food</option>
+              </select>
+              <select 
+                className="admin-filter-select"
+                value={dateFilter} 
+                onChange={(e) => setDateFilter(e.target.value)}
+              >
+                <option value="all">All Dates</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="past">Past</option>
+              </select>
+            </div>
           </div>
-          <div className="admin-filters">
-            <select 
-              className="admin-filter-select"
-              value={selectedCategory} 
-              onChange={(e) => setSelectedCategory(e.target.value)}
+
+          <div className="admin-actions">
+            <button 
+              className="admin-btn add-event-btn"
+              onClick={() => setIsAddEventModalOpen(true)}
             >
-              <option value="all">All Categories</option>
-              <option value="sports">Sports</option>
-              <option value="music">Music</option>
-              <option value="arts">Arts</option>
-              <option value="food">Food</option>
-            </select>
-            <select 
-              className="admin-filter-select"
-              value={dateFilter} 
-              onChange={(e) => setDateFilter(e.target.value)}
-            >
-              <option value="all">All Dates</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="past">Past</option>
-            </select>
+              Add New Event
+            </button>
           </div>
-        </div>
 
-        {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message">{error}</div>}
 
-        <div className="admin-events-grid">
-          {filteredEvents.length === 0 ? (
-            <div className="no-events">No events found</div>
-          ) : (
-            filteredEvents.map(event => (
-              <div key={event.id} className="admin-event-card">
-                <div className="admin-event-content">
-                  <div className="admin-event-header">
-                    <h3>{event.name}</h3>
-                    <p className="admin-event-description">{event.description}</p>
-                  </div>
-                  <div className="admin-event-details">
-                    <div className="admin-event-detail">
-                      <span className="admin-event-label">Category</span>
-                      <span className="admin-event-value">{event.category}</span>
+          <div className="admin-events-grid">
+            {filteredEvents.length === 0 ? (
+              <div className="no-events">No events found</div>
+            ) : (
+              filteredEvents.map(event => (
+                <div key={event.id} className="admin-event-card">
+                  <div className="admin-event-content">
+                    <div className="admin-event-header">
+                      <h3>{event.name}</h3>
+                      <p className="admin-event-description">{event.description}</p>
                     </div>
-                    <div className="admin-event-detail">
-                      <span className="admin-event-label">Date</span>
-                      <span className="admin-event-value">{new Date(event.date).toLocaleDateString()}</span>
+                    <div className="admin-event-details">
+                      <div className="admin-event-detail">
+                        <span className="admin-event-label">Category</span>
+                        <span className="admin-event-value">{event.category}</span>
+                      </div>
+                      <div className="admin-event-detail">
+                        <span className="admin-event-label">Date</span>
+                        <span className="admin-event-value">{new Date(event.date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="admin-event-detail">
+                        <span className="admin-event-label">Time</span>
+                        <span className="admin-event-value">{event.time}</span>
+                      </div>
+                      <div className="admin-event-detail">
+                        <span className="admin-event-label">Location</span>
+                        <span className="admin-event-value">{event.location}</span>
+                      </div>
+                      <div className="admin-event-detail">
+                        <span className="admin-event-label">Price</span>
+                        <span className="admin-event-value">${event.price}</span>
+                      </div>
+                      <div className="admin-event-detail">
+                        <span className="admin-event-label">Available Tickets</span>
+                        <span className="admin-event-value">{event.availableTickets}</span>
+                      </div>
                     </div>
-                    <div className="admin-event-detail">
-                      <span className="admin-event-label">Time</span>
-                      <span className="admin-event-value">{event.time}</span>
+                    <div className="admin-event-actions">
+                      <button 
+                        className="admin-action-btn edit-btn"
+                        onClick={() => handleEditEvent(event.id, event)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="admin-action-btn delete-btn"
+                        onClick={() => handleDeleteEvent(event.id)}
+                      >
+                        Delete
+                      </button>
                     </div>
-                    <div className="admin-event-detail">
-                      <span className="admin-event-label">Location</span>
-                      <span className="admin-event-value">{event.location}</span>
-                    </div>
-                    <div className="admin-event-detail">
-                      <span className="admin-event-label">Price</span>
-                      <span className="admin-event-value">${event.price}</span>
-                    </div>
-                    <div className="admin-event-detail">
-                      <span className="admin-event-label">Available Tickets</span>
-                      <span className="admin-event-value">{event.availableTickets}</span>
-                    </div>
-                  </div>
-                  <div className="admin-event-actions">
-                    <button 
-                      className="admin-action-btn edit-btn"
-                      onClick={() => handleEditEvent(event.id, event)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="admin-action-btn delete-btn"
-                      onClick={() => handleDeleteEvent(event.id)}
-                    >
-                      Delete
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
 

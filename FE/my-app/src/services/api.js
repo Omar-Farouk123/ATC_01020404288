@@ -63,6 +63,23 @@ export const adminAPI = {
     deleteEvent: (eventId) => api.delete(`/events/${eventId}`),
     getEventStats: () => api.get('/admin/stats/events'),
     getUserStats: () => api.get('/admin/stats/users'),
+    uploadEventImage: async (eventId, formData) => {
+        try {
+            const response = await axios.post(
+                `${API_URL}/events/${eventId}/upload-image`,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                }
+            );
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
 };
 
 // User API calls

@@ -19,20 +19,20 @@ public class Event {
     @Column(nullable = false)
     private String name;
 
-    @Column(length = 1000)
+    @Column(nullable = false, length = 1000)
     private String description;
 
     @Column(nullable = false)
     private LocalDate date;
 
     @Column(nullable = false)
-    private LocalTime time;
+    private String time;
 
     @Column(nullable = false)
     private String location;
 
     @Column(nullable = false)
-    private BigDecimal price;
+    private Double price;
 
     @Column(nullable = false)
     private String category;
@@ -40,7 +40,8 @@ public class Event {
     @Column(nullable = false)
     private Integer availableTickets;
 
-
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -52,6 +53,10 @@ public class Event {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    // Default constructor
+    public Event() {
     }
 
     // Getters and Setters
@@ -87,11 +92,11 @@ public class Event {
         this.date = date;
     }
 
-    public LocalTime getTime() {
+    public String getTime() {
         return time;
     }
 
-    public void setTime(LocalTime time) {
+    public void setTime(String time) {
         this.time = time;
     }
 
@@ -103,11 +108,11 @@ public class Event {
         this.location = location;
     }
 
-    public BigDecimal getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
@@ -127,7 +132,13 @@ public class Event {
         this.availableTickets = availableTickets;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
 
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

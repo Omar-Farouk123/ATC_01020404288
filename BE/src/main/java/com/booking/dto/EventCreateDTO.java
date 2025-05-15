@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 
 public class EventCreateDTO {
     @NotBlank(message = "Name is required")
@@ -14,21 +17,22 @@ public class EventCreateDTO {
     private String name;
 
     @NotBlank(message = "Description is required")
-    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
+    @Size(min = 5, max = 1000, message = "Description must be between 5 and 1000 characters")
     private String description;
 
     @NotNull(message = "Date is required")
+    @Future(message = "Date must be in the future")
     private LocalDate date;
 
-    @NotNull(message = "Time is required")
-    private LocalTime time;
+    @NotBlank(message = "Time is required")
+    private String time;
 
     @NotBlank(message = "Location is required")
     private String location;
 
     @NotNull(message = "Price is required")
-    @Positive(message = "Price must be positive")
-    private BigDecimal price;
+    @DecimalMin(value = "0.0", message = "Price must be greater than or equal to 0")
+    private Double price;
 
     @NotBlank(message = "Category is required")
     private String category;
@@ -36,7 +40,7 @@ public class EventCreateDTO {
     private String imageUrl;
 
     @NotNull(message = "Available tickets is required")
-    @Positive(message = "Available tickets must be positive")
+    @Min(value = 1, message = "Available tickets must be at least 1")
     private Integer availableTickets;
 
     // Default constructor
@@ -68,11 +72,11 @@ public class EventCreateDTO {
         this.date = date;
     }
 
-    public LocalTime getTime() {
+    public String getTime() {
         return time;
     }
 
-    public void setTime(LocalTime time) {
+    public void setTime(String time) {
         this.time = time;
     }
 
@@ -84,11 +88,11 @@ public class EventCreateDTO {
         this.location = location;
     }
 
-    public BigDecimal getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(BigDecimal price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../pages/Events.css';
+import { FaHome, FaTicketAlt, FaSignOutAlt, FaCalendarAlt } from 'react-icons/fa';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -12,7 +13,7 @@ const Events = () => {
   const [bookedEventIds, setBookedEventIds] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all'); // 'all', 'today', 'week', 'month'
+  const [dateFilter, setDateFilter] = useState('upcoming'); // 'all', 'today', 'week', 'month'
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [bookingStatus, setBookingStatus] = useState(null);
@@ -28,7 +29,7 @@ const Events = () => {
         }
       });
       
-      // Extract only the necessary event data, excluding registeredUsers
+      // Extract only the necessary event data, including imageUrl
       const cleanedEvents = response.data.map(event => ({
         id: event.id,
         name: event.name,
@@ -39,10 +40,11 @@ const Events = () => {
         price: event.price,
         category: event.category,
         availableTickets: event.availableTickets,
+        imageUrl: event.imageUrl,
         createdAt: event.createdAt
       }));
       
-      console.log('Fetched events:', cleanedEvents); // Add logging
+      console.log('Fetched events:', cleanedEvents); // Debug log
       setEvents(cleanedEvents);
       setError(null);
     } catch (err) {
@@ -128,6 +130,8 @@ const Events = () => {
         const monthLater = new Date(today);
         monthLater.setMonth(today.getMonth() + 1);
         return eventDateTime >= today && eventDateTime <= monthLater;
+      case 'upcoming':
+        return eventDateTime >= today;
       default:
         return true;
     }
@@ -187,6 +191,12 @@ const Events = () => {
     setBookingStatus(null);
   };
 
+  const eventDateTime = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -216,17 +226,6 @@ const Events = () => {
 
       {/* Header at the top of the page */}
       <div className="events-header">
-        <div className="top-nav">
-          <Link to="/" className="nav-btn">
-            <i className="fas fa-home"></i> Home
-          </Link>
-          <Link to="/settings" className="nav-btn">
-            <i className="fas fa-cog"></i> Settings
-          </Link>
-          <button className="nav-btn" onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt"></i> Logout
-          </button>
-        </div>
         <div className="events-header-content">
           <h1>Book your Events today</h1>
           <p>Discover and book amazing events in your area</p>
@@ -282,83 +281,128 @@ const Events = () => {
       )}
 
       {/* Main Content */}
-      <div className="events-container">
-        <div className="search-filter-container">
-          <div className="search-box">
-            <i className="fas fa-search"></i>
-            <input
-              type="text"
-              placeholder="Search events by name or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      <div className="events-content">
+        <div className="events-sidebar">
+          <Link to="/" className="events-nav-btn">
+            <FaHome />
+            <span>Home</span>
+          </Link>
+          <div className="events-nav-btn active">
+            <FaCalendarAlt />
+            <span>Events</span>
           </div>
-          <div className="filters-group">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="category-filter"
-            >
-              <option value="all">All Categories</option>
-              <option value="concert">Concerts</option>
-              <option value="sports">Sports</option>
-              <option value="theater">Theater</option>
-              <option value="exhibition">Exhibitions</option>
-            </select>
-            <select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="date-filter"
-            >
-              <option value="all">All Dates</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select>
-          </div>
+          <Link to="/booked-events" className="events-nav-btn">
+            <FaTicketAlt />
+            <span>Booked Events</span>
+          </Link>
+          <button onClick={handleLogout} className="events-nav-btn events-logout-btn">
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </button>
         </div>
 
-        <div className="events-grid">
-          {filteredEvents.length === 0 ? (
-            <div className="no-events-message">
-              <i className="fas fa-calendar-times"></i>
-              <p>No events found matching your criteria</p>
+        <div className="events-main">
+          <div className="search-filter-container">
+            <div className="search-box">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                placeholder="Search events by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          ) : (
-            filteredEvents.map((event) => (
-              <div key={event.id} className="event-card">
-                {bookedEventIds.has(event.id) && (
-                  <div className="booked-flag">
-                    <i className="fas fa-check-circle"></i> Booked
-                  </div>
-                )}
-                <div className="event-details">
-                  <h3>{event.name}</h3>
-                  <div className="event-info">
-                    <span><i className="fas fa-calendar"></i> {new Date(event.date).toLocaleDateString()}</span>
-                    <span><i className="fas fa-clock"></i> {event.time}</span>
-                  </div>
-                  <div className="event-location">
-                    <i className="fas fa-map-marker-alt"></i> {event.location}
-                  </div>
-                  <p className="event-description">{event.description}</p>
-                  <div className="event-footer">
-                    <span className="event-price">${event.price}</span>
-                    {!bookedEventIds.has(event.id) && (
-                      <button 
-                        className={`book-button ${!isLoggedIn ? 'disabled' : ''}`}
-                        disabled={!isLoggedIn}
-                        onClick={() => handleBookNow(event)}
-                        title={!isLoggedIn ? "Please login to book events" : "Book this event"}
-                      >
-                        {isLoggedIn ? 'Book Now' : 'Login to Book'}
-                      </button>
-                    )}
-                  </div>
-                </div>
+            <div className="filters-group">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="category-filter"
+              >
+                <option value="all">All Categories</option>
+                <option value="concert">Concerts</option>
+                <option value="sports">Sports</option>
+                <option value="theater">Theater</option>
+                <option value="exhibition">Exhibitions</option>
+              </select>
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="date-filter"
+              >
+                <option value="all">All</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="events-grid">
+            {filteredEvents.length === 0 ? (
+              <div className="no-events-message">
+                <i className="fas fa-calendar-times"></i>
+                <p>No events found matching your criteria</p>
               </div>
-            ))
-          )}
+            ) : (
+              filteredEvents.map((event) => {
+                const eventDate = eventDateTime(event.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return (
+                  <div key={event.id} className="event-card">
+                    {event.imageUrl && (
+                      <div className="event-image-container">
+                        <img 
+                          src={`http://localhost:8080${event.imageUrl}`}
+                          alt={event.name}
+                          className="event-image"
+                          onError={(e) => {
+                            console.log('Image failed to load:', event.imageUrl);
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/400x200?text=No+Image+Available';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="event-details">
+                      <h3>{event.name}</h3>
+                      <div className="event-info">
+                        <span><i className="fas fa-calendar"></i> {new Date(event.date).toLocaleDateString()}</span>
+                        <span><i className="fas fa-clock"></i> {event.time}</span>
+                      </div>
+                      <div className="event-location">
+                        <i className="fas fa-map-marker-alt"></i> {event.location}
+                      </div>
+                      <p className="event-description">{event.description}</p>
+                      <div className="event-flags">
+                        {eventDate < today && (
+                          <span className="date-passed-flag">Date Passed</span>
+                        )}
+                        {bookedEventIds.has(event.id) && (
+                          <span className="booked-flag"><i className="fas fa-check-circle"></i> Booked</span>
+                        )}
+                      </div>
+                      <div className="event-footer">
+                        <span className="event-price">${event.price}</span>
+                        {!bookedEventIds.has(event.id) && (
+                          <button 
+                            className={`book-button ${!isLoggedIn ? 'disabled' : ''}`}
+                            disabled={!isLoggedIn}
+                            onClick={() => handleBookNow(event)}
+                            title={!isLoggedIn ? "Please login to book events" : "Book this event"}
+                          >
+                            {isLoggedIn ? 'Book Now' : 'Login to Book'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 

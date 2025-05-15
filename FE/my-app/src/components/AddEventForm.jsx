@@ -11,10 +11,10 @@ const AddEventForm = ({ onClose, onEventAdded }) => {
     location: '',
     category: '',
     price: '',
-    imageUrl: '',
     availableTickets: 100
   });
 
+  const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -26,22 +26,37 @@ const AddEventForm = ({ onClose, onEventAdded }) => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      // Format the data to match backend expectations
+      // First create the event
       const formattedData = {
         ...formData,
-        // Convert price to number
         price: parseFloat(formData.price),
-        // Ensure availableTickets is a number
         availableTickets: parseInt(formData.availableTickets, 10)
       };
 
-      await adminAPI.createEvent(formattedData);
+      const response = await adminAPI.createEvent(formattedData);
+      const eventId = response.data.id;
+
+      // Then upload the image if one was selected
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        await adminAPI.uploadEventImage(eventId, formData);
+      }
+
       onEventAdded();
       onClose();
     } catch (err) {
@@ -162,16 +177,28 @@ const AddEventForm = ({ onClose, onEventAdded }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="imageUrl">Image URL</label>
-            <input
-              type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              required
-              placeholder="Enter image URL"
-            />
+            <label htmlFor="eventImage">Event Image</label>
+            <div className="file-upload-container">
+              <label htmlFor="eventImage" className="file-upload-label">
+                <i className="fas fa-cloud-upload-alt upload-icon"></i>
+                <span>{selectedFile ? selectedFile.name : 'Drop your image here or click to browse'}</span>
+              </label>
+              <input
+                type="file"
+                id="eventImage"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="file-input"
+              />
+              {selectedFile && (
+                <div className="image-preview">
+                  <img 
+                    src={URL.createObjectURL(selectedFile)} 
+                    alt="Preview" 
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group">

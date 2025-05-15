@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import Events from './pages/Events';
+import BookedEvents from './pages/BookedEvents';
 import AdminPage from './pages/AdminPage';
 import UserManagementPage from './pages/UserManagementPage';
 import LoadingBar from './components/LoadingBar';
@@ -23,6 +24,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Events />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/booked-events" 
+            element={
+              <ProtectedRoute>
+                <BookedEvents />
               </ProtectedRoute>
             } 
           />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaHome, FaUsers, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaUsers, FaSignOutAlt, FaChartBar } from 'react-icons/fa';
 import { adminAPI } from '../services/api';
 import './UserManagementPage.css';
 
@@ -87,8 +87,12 @@ const UserManagementPage = () => {
 
       <div className="user-content">
         <div className="user-nav">
-          <Link to="/admin" className="nav-btn">
+          <Link to="/" className="nav-btn">
             <FaHome />
+            <span>Home</span>
+          </Link>
+          <Link to="/admin" className="nav-btn">
+            <FaChartBar />
             <span>Dashboard</span>
           </Link>
           <Link to="/admin/users" className="nav-btn active">
