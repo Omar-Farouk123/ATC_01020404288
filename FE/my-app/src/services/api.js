@@ -66,7 +66,14 @@ api.interceptors.response.use(
 // Auth API calls
 export const authAPI = {
     login: (email, password) => api.post('/auth/login', { email, password }),
-    register: (userData) => api.post('/auth/register', userData),
+    register: (userData) => {
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        };
+        return api.post('/auth/register', userData, config);
+    }
 };
 
 // Events API calls

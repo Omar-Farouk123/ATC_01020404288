@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '../config';
+import authService from '../services/AuthService';
 import '../pages/Events.css';
 import { FaHome, FaTicketAlt, FaSignOutAlt, FaCalendarAlt, FaSignInAlt } from 'react-icons/fa';
 
@@ -10,6 +12,7 @@ const Events = () => {
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [userImageUrl, setUserImageUrl] = useState(null);
   const [bookedEventIds, setBookedEventIds] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -19,6 +22,8 @@ const Events = () => {
   const [bookingStatus, setBookingStatus] = useState(null);
   const [showLoginNotification, setShowLoginNotification] = useState(false);
   const [priceFilter, setPriceFilter] = useState('all');
+  const [selectedEventDetails, setSelectedEventDetails] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const navigate = useNavigate();
   const isAuthenticated = !!user;
 
@@ -59,6 +64,20 @@ const Events = () => {
     }
   };
 
+  const fetchUserData = async () => {
+    try {
+      const userData = authService.getCurrentUser();
+      if (!userData) {
+        navigate('/login');
+        return;
+      }
+      setUser(userData);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setError('Failed to load user data');
+    }
+  };
+
   useEffect(() => {
     // Check if user is logged in and token is not expired
     const token = localStorage.getItem('token');
@@ -71,6 +90,8 @@ const Events = () => {
       console.log('User is logged in:', userDetails);
       setIsLoggedIn(true);
       setUser(userDetails);
+      // Fetch complete user data including image URL
+      fetchUserData();
     } else {
       // Clear expired session
       localStorage.removeItem('token');
@@ -82,7 +103,7 @@ const Events = () => {
 
     // Fetch events
     fetchEvents();
-  }, []); // Remove dependencies to prevent infinite loop
+  }, [navigate]); // Remove dependencies to prevent infinite loop
 
   // Helper to fetch booked events
   const fetchBookedEvents = async (userId) => {
@@ -181,6 +202,13 @@ const Events = () => {
     }
     setSelectedEvent(event);
     setShowConfirmation(true);
+    // Close the event details modal if it's open
+    if (isDetailsModalOpen) {
+      setIsDetailsModalOpen(false);
+      setTimeout(() => {
+        setSelectedEventDetails(null);
+      }, 300);
+    }
   };
 
   const handleConfirmBooking = async () => {
@@ -226,6 +254,18 @@ const Events = () => {
     return d;
   };
 
+  const handleEventCardClick = (event) => {
+    setSelectedEventDetails(event);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setTimeout(() => {
+      setSelectedEventDetails(null);
+    }, 300); // Wait for animation to complete
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -256,8 +296,28 @@ const Events = () => {
       {/* Header at the top of the page */}
       <div className="events-header">
         <div className="events-header-content">
-          <h1>Book your Events today</h1>
-          <p>Discover and book amazing events in your area</p>
+          <div className="header-left">
+            <h1>Book your Events today</h1>
+            <p>Discover and book amazing events in your area</p>
+          </div>
+          {isAuthenticated && (
+            <div className="header-right">
+              <div className="user-avatar">
+                {userImageUrl ? (
+                  <img 
+                    src={`${API_URL}${userImageUrl}`}
+                    alt="User avatar"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/default-avatar.png';
+                    }}
+                  />
+                ) : (
+                  <i className="fas fa-user"></i>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -400,9 +460,13 @@ const Events = () => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 return (
-                  <div key={event.id} className="event-card">
-                    {event.imageUrl && (
-                      <div className="event-image-container">
+                  <div 
+                    key={event.id} 
+                    className="event-card"
+                    onClick={() => handleEventCardClick(event)}
+                  >
+                    <div className="event-image-container">
+                      {event.imageUrl ? (
                         <img 
                           src={`http://localhost:8080${event.imageUrl}`}
                           alt={event.name}
@@ -414,45 +478,43 @@ const Events = () => {
                               eventName: event.name
                             });
                             e.target.onerror = null;
-                            e.target.src = 'https://via.placeholder.com/400x200?text=No+Image+Available';
+                            e.target.src = 'https://via.placeholder.com/300x300?text=No+Image+Available';
                           }}
                         />
-                      </div>
-                    )}
-                    {!event.imageUrl && (
-                      <div className="event-image-container">
+                      ) : (
                         <img 
-                          src="https://via.placeholder.com/400x200?text=No+Image+Available"
+                          src="https://via.placeholder.com/300x300?text=No+Image+Available"
                           alt="No image available"
                           className="event-image"
                         />
-                      </div>
-                    )}
+                      )}
+                    </div>
                     <div className="event-details">
                       <h3>{event.name}</h3>
                       <div className="event-info">
                         <span><i className="fas fa-calendar"></i> {new Date(event.date).toLocaleDateString()}</span>
                         <span><i className="fas fa-clock"></i> {event.time}</span>
+                        <span><i className="fas fa-tag"></i> {event.category}</span>
+                        <span><i className="fas fa-ticket-alt"></i> {event.availableTickets} tickets left</span>
                       </div>
                       <div className="event-location">
                         <i className="fas fa-map-marker-alt"></i> {event.location}
                       </div>
                       <p className="event-description">{event.description}</p>
-                      <div className="event-flags">
-                        {eventDate < today && (
-                          <span className="date-passed-flag">Date Passed</span>
-                        )}
-                        {bookedEventIds.has(event.id) && (
-                          <span className="booked-flag"><i className="fas fa-check-circle"></i> Booked</span>
-                        )}
-                      </div>
                       <div className="event-footer">
                         <span className="event-price">${event.price}</span>
-                        {!bookedEventIds.has(event.id) && (
+                        {eventDate < today ? (
+                          <span className="date-passed-flag">Date Passed</span>
+                        ) : bookedEventIds.has(event.id) ? (
+                          <span className="booked-flag"><i className="fas fa-check-circle"></i> Booked</span>
+                        ) : (
                           <button 
                             className={`book-button ${!isLoggedIn ? 'disabled' : ''}`}
                             disabled={!isLoggedIn}
-                            onClick={() => handleBookNow(event)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBookNow(event);
+                            }}
                             title={!isLoggedIn ? "Please login to book events" : "Book this event"}
                           >
                             {isLoggedIn ? 'Book Now' : 'Login to Book'}
@@ -474,10 +536,10 @@ const Events = () => {
           <div className="footer-section">
             <h3>Quick Links</h3>
             <ul>
-              <li><Link to="/faq">How to Book</Link></li>
-              <li><Link to="/faq">Cancellation Policy</Link></li>
-              <li><Link to="/faq">Refund Policy</Link></li>
-              <li><Link to="/faq">Terms & Conditions</Link></li>
+              <li>How to Book</li>
+              <li>Cancellation Policy</li>
+              <li>Refund Policy</li>
+              <li>Terms & Conditions</li>
             </ul>
           </div>
           
@@ -492,11 +554,11 @@ const Events = () => {
           
           <div className="footer-section">
             <h3>Follow Us</h3>
-            <div className="social-links">
-              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook"></i></a>
-              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-twitter"></i></a>
-              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
-              <a href="#" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin"></i></a>
+            <div className="social-links" style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+              <i className="fab fa-facebook"></i>
+              <i className="fab fa-twitter"></i>
+              <i className="fab fa-instagram"></i>
+              <i className="fab fa-linkedin"></i>
             </div>
           </div>
         </div>
@@ -509,6 +571,104 @@ const Events = () => {
       {showLoginNotification && (
         <div className="login-notification">
           Please login to book events
+        </div>
+      )}
+
+      {/* Event Details Modal */}
+      {selectedEventDetails && (
+        <div className={`event-details-modal ${isDetailsModalOpen ? 'active' : ''}`}>
+          <div className="event-details-content">
+            <button className="close-modal-btn" onClick={handleCloseDetailsModal}>
+              <i className="fas fa-times"></i>
+            </button>
+            
+            <div className="event-details-header">
+              <div className="event-details-header-image">
+                <img 
+                  src={selectedEventDetails.imageUrl 
+                    ? `http://localhost:8080${selectedEventDetails.imageUrl}`
+                    : 'https://via.placeholder.com/300x300?text=No+Image+Available'
+                  }
+                  alt={selectedEventDetails.name}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/300x300?text=No+Image+Available';
+                  }}
+                />
+              </div>
+              <div className="event-details-header-content">
+                <h2>{selectedEventDetails.name}</h2>
+                <span className="event-category">{selectedEventDetails.category}</span>
+              </div>
+            </div>
+
+            <div className="event-details-body">
+              <div className="event-details-grid">
+                <div className="event-details-item">
+                  <i className="fas fa-calendar"></i>
+                  <div className="event-details-item-content">
+                    <div className="event-details-item-label">Date</div>
+                    <div className="event-details-item-value">
+                      {new Date(selectedEventDetails.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="event-details-item">
+                  <i className="fas fa-clock"></i>
+                  <div className="event-details-item-content">
+                    <div className="event-details-item-label">Time</div>
+                    <div className="event-details-item-value">{selectedEventDetails.time}</div>
+                  </div>
+                </div>
+
+                <div className="event-details-item">
+                  <i className="fas fa-map-marker-alt"></i>
+                  <div className="event-details-item-content">
+                    <div className="event-details-item-label">Location</div>
+                    <div className="event-details-item-value">{selectedEventDetails.location}</div>
+                  </div>
+                </div>
+
+                <div className="event-details-item">
+                  <i className="fas fa-ticket-alt"></i>
+                  <div className="event-details-item-content">
+                    <div className="event-details-item-label">Available Tickets</div>
+                    <div className="event-details-item-value">{selectedEventDetails.availableTickets}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="event-details-description">
+                <h3>About this event</h3>
+                <p>{selectedEventDetails.description}</p>
+              </div>
+            </div>
+
+            <div className="event-details-footer">
+              <div className="event-details-price">${selectedEventDetails.price}</div>
+              {(() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return eventDateTime(selectedEventDetails.date) < today ? (
+                  <span className="date-passed-flag">Date Passed</span>
+                ) : bookedEventIds.has(selectedEventDetails.id) ? (
+                  <span className="booked-flag"><i className="fas fa-check-circle"></i> Booked</span>
+                ) : (
+                  <button 
+                    className={`book-button ${!isLoggedIn ? 'disabled' : ''}`}
+                    disabled={!isLoggedIn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBookNow(selectedEventDetails);
+                    }}
+                    title={!isLoggedIn ? "Please login to book events" : "Book this event"}
+                  >
+                    {isLoggedIn ? 'Book Now' : 'Login to Book'}
+                  </button>
+                );
+              })()}
+            </div>
+          </div>
         </div>
       )}
     </div>

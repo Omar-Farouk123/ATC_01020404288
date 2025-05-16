@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaHome, FaTicketAlt, FaSignOutAlt, FaCalendarAlt } from 'react-icons/fa';
 import axios from 'axios';
+import { API_URL } from '../config';
+import authService from '../services/AuthService';
 import './Events.css';
 
 const BookedEvents = () => {
@@ -10,6 +12,7 @@ const BookedEvents = () => {
   const [error, setError] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  const [userImageUrl, setUserImageUrl] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('upcoming');
@@ -59,6 +62,32 @@ const BookedEvents = () => {
     }
   };
 
+  const fetchUserData = async () => {
+    try {
+      const userData = authService.getCurrentUser();
+      if (!userData) {
+        navigate('/login');
+        return;
+      }
+      setUser(userData);
+
+      // Fetch user image using the new API endpoint
+      const response = await axios.get(`${API_URL}/api/users/${userData.id}/image`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.status === 200) {
+        const imageUrl = response.data;
+        setUserImageUrl(imageUrl);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setError('Failed to load user data');
+    }
+  };
+
   useEffect(() => {
     // Check if user is logged in and token is not expired
     const token = localStorage.getItem('token');
@@ -70,6 +99,8 @@ const BookedEvents = () => {
     if (token && userDetails && !isTokenExpired) {
       setIsLoggedIn(true);
       setUser(userDetails);
+      // Fetch complete user data including image URL
+      fetchUserData();
       fetchBookedEvents();
     } else {
       // Clear expired session
@@ -176,8 +207,28 @@ const BookedEvents = () => {
       {/* Header at the top of the page */}
       <div className="events-header">
         <div className="events-header-content">
-          <h1>Your Booked Events</h1>
-          <p>View and manage your event bookings</p>
+          <div className="header-left">
+            <h1>Your Booked Events</h1>
+            <p>View and manage your event bookings</p>
+          </div>
+          {user && (
+            <div className="header-right">
+              <div className="user-avatar">
+                {userImageUrl ? (
+                  <img 
+                    src={`${API_URL}${userImageUrl}`}
+                    alt={user.fullName}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/default-avatar.png';
+                    }}
+                  />
+                ) : (
+                  <i className="fas fa-user"></i>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 package com.booking.controller;
 
-import com.booking.entity.Event;
-import com.booking.repository.EventRepository;
+import com.booking.entity.User;
+import com.booking.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,20 +16,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
 import jakarta.annotation.PostConstruct;
 
 @RestController
-@RequestMapping("/api/events")
-public class EventImageController {
+@RequestMapping("/api/users")
+public class UserImageController {
 
-    @Value("${event.images.dir:uploads/events}")
+    @Value("${user.images.dir:uploads/users}")
     private String imagesDir;
 
-    private final EventRepository eventRepository;
+    private final UserRepository userRepository;
 
-    public EventImageController(EventRepository eventRepository) {
-        this.eventRepository = eventRepository;
+    public UserImageController(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @PostConstruct
@@ -47,20 +48,37 @@ public class EventImageController {
         }
     }
 
+    @GetMapping("/{id}/image")
+    public ResponseEntity<?> getUserImage(@PathVariable Long id) {
+        System.out.println("=== Fetching User Image ===");
+        System.out.println("User ID: " + id);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getImageUrl() == null || user.getImageUrl().isEmpty()) {
+            System.out.println("No image URL found for user");
+            return ResponseEntity.notFound().build();
+        }
+
+        System.out.println("User image URL: " + user.getImageUrl());
+        return ResponseEntity.ok(user.getImageUrl());
+    }
+
     @PostMapping("/{id}/upload-image")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> uploadEventImage(
+    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    public ResponseEntity<?> uploadUserImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file) throws IOException {
         
-        System.out.println("=== Uploading Event Image ===");
-        System.out.println("Event ID: " + id);
+        System.out.println("=== Uploading User Image ===");
+        System.out.println("User ID: " + id);
         System.out.println("Original filename: " + file.getOriginalFilename());
         System.out.println("Content type: " + file.getContentType());
         System.out.println("File size: " + file.getSize() + " bytes");
         
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Create directory if it doesn't exist
         Path uploadPath = Paths.get(imagesDir).toAbsolutePath();
@@ -80,7 +98,7 @@ public class EventImageController {
         System.out.println("Directory executable: " + dir.canExecute());
 
         // Generate unique filename
-        String filename = "event_" + id + "_" + System.currentTimeMillis() + "_" 
+        String filename = "user_" + id + "_" + System.currentTimeMillis() + "_" 
             + StringUtils.cleanPath(file.getOriginalFilename());
         System.out.println("Generated filename: " + filename);
 
@@ -94,14 +112,14 @@ public class EventImageController {
         System.out.println("File readable: " + filePath.toFile().canRead());
         System.out.println("File size: " + filePath.toFile().length() + " bytes");
 
-        // Update event with image URL
-        String imageUrl = "/api/images/events/" + filename;
+        // Update user with image URL
+        String imageUrl = "/uploads/users/" + filename;
         System.out.println("Setting image URL: " + imageUrl);
         
-        event.setImageUrl(imageUrl);
-        eventRepository.save(event);
+        user.setImageUrl(imageUrl);
+        userRepository.save(user);
         
-        System.out.println("Event updated with new image URL");
+        System.out.println("User updated with new image URL");
         System.out.println("=============================");
         
         return ResponseEntity.ok(imageUrl);

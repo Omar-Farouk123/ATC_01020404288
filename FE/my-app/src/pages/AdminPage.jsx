@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser, FaHome } from 'react-icons/fa';
 import { eventsAPI, adminAPI } from '../services/api';
 import AddEventForm from '../components/AddEventForm';
+import EditEventForm from '../components/EditEventForm';
 import './AdminPage.css';
 
 const AdminPage = () => {
@@ -14,6 +15,8 @@ const AdminPage = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [user, setUser] = useState(null);
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -118,14 +121,9 @@ const AdminPage = () => {
     }
   };
 
-  const handleEditEvent = async (eventId, updatedData) => {
-    try {
-      await adminAPI.updateEvent(eventId, updatedData);
-      await fetchEvents(); // Refresh the events list
-    } catch (err) {
-      setError('Failed to update event. Please try again later.');
-      console.error('Error updating event:', err);
-    }
+  const handleEditEvent = (event) => {
+    setSelectedEvent(event);
+    setIsEditModalOpen(true);
   };
 
   const filteredEvents = events.filter(event => {
@@ -150,8 +148,28 @@ const AdminPage = () => {
     <div className="admin-dashboard">
       <div className="admin-header">
         <div className="admin-header-content">
-          <h1>Admin Dashboard</h1>
-          <p>Manage your events and users</p>
+          <div className="header-left">
+            <h1>Admin Dashboard</h1>
+            <p>Manage your events and users</p>
+          </div>
+          {user && (
+            <div className="header-right">
+              <div className="user-avatar">
+                {user.imageUrl ? (
+                  <img 
+                    src={`http://localhost:8080${user.imageUrl}`}
+                    alt={user.fullName}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/40x40?text=U';
+                    }}
+                  />
+                ) : (
+                  <i className="fas fa-user"></i>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -280,7 +298,7 @@ const AdminPage = () => {
                     <div className="admin-event-actions">
                       <button 
                         className="admin-event-action-btn edit-btn"
-                        onClick={() => handleEditEvent(event.id, event)}
+                        onClick={() => handleEditEvent(event)}
                       >
                         Edit
                       </button>
@@ -303,6 +321,17 @@ const AdminPage = () => {
         <AddEventForm 
           onClose={() => setIsAddEventModalOpen(false)}
           onEventAdded={fetchEvents}
+        />
+      )}
+
+      {isEditModalOpen && selectedEvent && (
+        <EditEventForm
+          event={selectedEvent}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          onEventUpdated={fetchEvents}
         />
       )}
     </div>

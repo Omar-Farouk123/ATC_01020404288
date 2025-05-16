@@ -80,8 +80,28 @@ const UserManagementPage = () => {
     <div className="user-management-page">
       <div className="user-header">
         <div className="user-header-content">
-          <h1>User Management</h1>
-          <p>Manage user accounts and permissions</p>
+          <div className="header-left">
+            <h1>User Management</h1>
+            <p>Manage user accounts and permissions</p>
+          </div>
+          {user && (
+            <div className="header-right">
+              <div className="user-avatar">
+                {user.imageUrl ? (
+                  <img 
+                    src={`http://localhost:8080${user.imageUrl}`}
+                    alt={user.fullName}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://via.placeholder.com/40x40?text=U';
+                    }}
+                  />
+                ) : (
+                  <i className="fas fa-user"></i>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

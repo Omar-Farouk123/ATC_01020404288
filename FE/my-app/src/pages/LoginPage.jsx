@@ -15,10 +15,14 @@ const LoginPage = () => {
     confirmPassword: '',
     name: '',
     address: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    imageUrl: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,6 +37,42 @@ const LoginPage = () => {
       ...prevState,
       phoneNumber: value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -87,19 +127,21 @@ const LoginPage = () => {
           return;
         }
 
-        // Prepare registration data
-        const registrationData = {
-          fullName: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address
-        };
+        // Create FormData for image upload
+        const formDataToSend = new FormData();
+        formDataToSend.append('fullName', formData.name);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('password', formData.password);
+        formDataToSend.append('phoneNumber', formData.phoneNumber);
+        formDataToSend.append('address', formData.address);
+        if (selectedImage) {
+          formDataToSend.append('image', selectedImage);
+        }
 
-        const response = await authAPI.register(registrationData);
+        const response = await authAPI.register(formDataToSend);
         
         if (response.data) {
-          const { token, role, id, email, fullName } = response.data;
+          const { token, role, id, email, fullName, imageUrl } = response.data;
           
           // Set session expiration time (24 hours from now)
           const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
@@ -110,7 +152,8 @@ const LoginPage = () => {
             id,
             email,
             fullName,
-            role
+            role,
+            imageUrl
           }));
           localStorage.setItem('tokenExpiry', expiryTime.toString());
           
@@ -124,8 +167,11 @@ const LoginPage = () => {
             confirmPassword: '',
             name: '',
             address: '',
-            phoneNumber: ''
+            phoneNumber: '',
+            imageUrl: ''
           });
+          setSelectedImage(null);
+          setImagePreview(null);
           
           // Switch to login view after successful registration
           setIsLogin(true);
@@ -204,6 +250,44 @@ const LoginPage = () => {
                   onChange={handleChange}
                   placeholder="Enter your address"
                 />
+              </div>
+              <div className="form-group">
+                <label htmlFor="image">Profile Picture</label>
+                <div 
+                  className={`image-upload-container ${isDragging ? 'dragging' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="image-upload-input"
+                  />
+                  <div className="upload-placeholder">
+                    <i className="fas fa-cloud-upload-alt"></i>
+                    <p>Drag and drop your profile picture here, or click to browse</p>
+                    <span>Supports: JPG, PNG, GIF</span>
+                  </div>
+                  {imagePreview && (
+                    <div className="image-preview">
+                      <img src={imagePreview} alt="Preview" />
+                      <button 
+                        type="button" 
+                        className="remove-image-btn"
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setImagePreview(null);
+                        }}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
