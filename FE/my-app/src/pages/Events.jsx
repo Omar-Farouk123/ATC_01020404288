@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../pages/Events.css';
-import { FaHome, FaTicketAlt, FaSignOutAlt, FaCalendarAlt } from 'react-icons/fa';
+import { FaHome, FaTicketAlt, FaSignOutAlt, FaCalendarAlt, FaSignInAlt } from 'react-icons/fa';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -13,11 +13,14 @@ const Events = () => {
   const [bookedEventIds, setBookedEventIds] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [dateFilter, setDateFilter] = useState('upcoming'); // 'all', 'today', 'week', 'month'
+  const [dateFilter, setDateFilter] = useState('upcoming'); // Set default to upcoming
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [bookingStatus, setBookingStatus] = useState(null);
+  const [showLoginNotification, setShowLoginNotification] = useState(false);
+  const [priceFilter, setPriceFilter] = useState('all');
   const navigate = useNavigate();
+  const isAuthenticated = !!user;
 
   const fetchEvents = async () => {
     try {
@@ -122,6 +125,10 @@ const Events = () => {
     switch (dateFilter) {
       case 'today':
         return eventDateTime.getTime() === today.getTime();
+      case 'tomorrow':
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        return eventDateTime.getTime() === tomorrow.getTime();
       case 'week':
         const weekLater = new Date(today);
         weekLater.setDate(today.getDate() + 7);
@@ -133,6 +140,23 @@ const Events = () => {
       case 'upcoming':
         return eventDateTime >= today;
       default:
+        return eventDateTime >= today; // Default to upcoming
+    }
+  };
+
+  const isEventInPriceRange = (eventPrice) => {
+    switch (priceFilter) {
+      case 'free':
+        return eventPrice === 0;
+      case 'paid':
+        return eventPrice > 0;
+      case '0-50':
+        return eventPrice >= 0 && eventPrice <= 50;
+      case '50-100':
+        return eventPrice > 50 && eventPrice <= 100;
+      case '100+':
+        return eventPrice > 100;
+      default:
         return true;
     }
   };
@@ -140,14 +164,19 @@ const Events = () => {
   const filteredEvents = Array.isArray(events) ? events.filter(event => {
     const matchesSearch = event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || event.category.toLowerCase() === selectedCategory.toLowerCase();
     const matchesDate = isEventInDateRange(event.date);
-    return matchesSearch && matchesCategory && matchesDate;
+    const matchesPrice = isEventInPriceRange(event.price);
+    return matchesSearch && matchesCategory && matchesDate && matchesPrice;
   }) : [];
 
   const handleBookNow = (event) => {
     if (!isLoggedIn) {
-      navigate('/login');
+      setShowLoginNotification(true);
+      setTimeout(() => {
+        setShowLoginNotification(false);
+        navigate('/login');
+      }, 1500);
       return;
     }
     setSelectedEvent(event);
@@ -291,14 +320,23 @@ const Events = () => {
             <FaCalendarAlt />
             <span>Events</span>
           </div>
-          <Link to="/booked-events" className="events-nav-btn">
-            <FaTicketAlt />
-            <span>Booked Events</span>
-          </Link>
-          <button onClick={handleLogout} className="events-nav-btn events-logout-btn">
-            <FaSignOutAlt />
-            <span>Logout</span>
-          </button>
+          {isAuthenticated && (
+            <Link to="/booked-events" className="events-nav-btn">
+              <FaTicketAlt />
+              <span>Booked Events</span>
+            </Link>
+          )}
+          {isAuthenticated ? (
+            <button onClick={handleLogout} className="events-nav-btn events-logout-btn">
+              <FaSignOutAlt />
+              <span>Logout</span>
+            </button>
+          ) : (
+            <Link to="/login" className="events-nav-btn">
+              <FaSignInAlt />
+              <span>Login</span>
+            </Link>
+          )}
         </div>
 
         <div className="events-main">
@@ -307,7 +345,7 @@ const Events = () => {
               <i className="fas fa-search"></i>
               <input
                 type="text"
-                placeholder="Search events by name or description..."
+                placeholder="Search events..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -319,22 +357,33 @@ const Events = () => {
                 className="category-filter"
               >
                 <option value="all">All Categories</option>
-                <option value="concert">Concerts</option>
                 <option value="sports">Sports</option>
-                <option value="theater">Theater</option>
-                <option value="exhibition">Exhibitions</option>
+                <option value="music">Music</option>
+                <option value="arts">Arts</option>
+                <option value="food">Food</option>
               </select>
               <select
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
                 className="date-filter"
               >
-                <option value="all">All</option>
                 <option value="upcoming">Upcoming</option>
                 <option value="today">Today</option>
+                <option value="tomorrow">Tomorrow</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
-                <option value="year">This Year</option>
+              </select>
+              <select
+                value={priceFilter}
+                onChange={(e) => setPriceFilter(e.target.value)}
+                className="price-filter"
+              >
+                <option value="all">All Prices</option>
+                <option value="free">Free</option>
+                <option value="paid">Paid</option>
+                <option value="0-50">$0 - $50</option>
+                <option value="50-100">$50 - $100</option>
+                <option value="100+">$100+</option>
               </select>
             </div>
           </div>
@@ -359,10 +408,23 @@ const Events = () => {
                           alt={event.name}
                           className="event-image"
                           onError={(e) => {
-                            console.log('Image failed to load:', event.imageUrl);
+                            console.error('Image failed to load:', {
+                              imageUrl: event.imageUrl,
+                              eventId: event.id,
+                              eventName: event.name
+                            });
                             e.target.onerror = null;
                             e.target.src = 'https://via.placeholder.com/400x200?text=No+Image+Available';
                           }}
+                        />
+                      </div>
+                    )}
+                    {!event.imageUrl && (
+                      <div className="event-image-container">
+                        <img 
+                          src="https://via.placeholder.com/400x200?text=No+Image+Available"
+                          alt="No image available"
+                          className="event-image"
                         />
                       </div>
                     )}
@@ -443,6 +505,12 @@ const Events = () => {
           <p>&copy; 2024 Event Booking System. All rights reserved.</p>
         </div>
       </footer>
+
+      {showLoginNotification && (
+        <div className="login-notification">
+          Please login to book events
+        </div>
+      )}
     </div>
   );
 };

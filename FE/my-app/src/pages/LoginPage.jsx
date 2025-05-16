@@ -47,6 +47,13 @@ const LoginPage = () => {
         const response = await authAPI.login(formData.email, formData.password);
         const { token, role, id, email, fullName } = response.data;
         
+        console.log('Login response:', {
+          token: token ? 'Present' : 'Missing',
+          role,
+          id,
+          email
+        });
+        
         // Set session expiration time (24 hours from now)
         const expiryTime = new Date().getTime() + (24 * 60 * 60 * 1000);
         
@@ -56,7 +63,7 @@ const LoginPage = () => {
           id,
           email,
           fullName,
-          role
+          role: role?.toUpperCase() // Ensure role is always uppercase
         }));
         localStorage.setItem('tokenExpiry', expiryTime.toString());
         
@@ -66,7 +73,7 @@ const LoginPage = () => {
         // Wait for 1 second before navigating
         setTimeout(() => {
           // Navigate based on user role
-          if (role === 'ADMIN') {
+          if (role?.toUpperCase() === 'ADMIN') {
             navigate('/admin');
           } else {
             navigate('/events');

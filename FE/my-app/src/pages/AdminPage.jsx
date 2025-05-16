@@ -20,12 +20,25 @@ const AdminPage = () => {
     // Get user data from localStorage and check token expiration
     const userData = JSON.parse(localStorage.getItem('user'));
     const tokenExpiry = localStorage.getItem('tokenExpiry');
+    const token = localStorage.getItem('token');
+    
+    console.log('Current token:', token ? 'Present' : 'Missing');
+    console.log('Token expiry:', tokenExpiry ? new Date(parseInt(tokenExpiry)).toLocaleString() : 'Missing');
+    console.log('User data:', userData);
     
     const isTokenExpired = tokenExpiry && new Date().getTime() > parseInt(tokenExpiry);
     
     if (userData && !isTokenExpired) {
+      console.log('User role:', userData.role);
+      if (userData.role?.toUpperCase() !== 'ADMIN') {
+        console.error('User is not an admin');
+        setError('You do not have admin privileges');
+        navigate('/login');
+        return;
+      }
       setUser(userData);
     } else {
+      console.log('Session expired or invalid');
       // Clear expired session
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -59,11 +72,48 @@ const AdminPage = () => {
   const handleDeleteEvent = async (eventId) => {
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
+        const token = localStorage.getItem('token');
+        const userData = JSON.parse(localStorage.getItem('user'));
+        
+        console.log('Delete request details:', {
+          eventId,
+          token: token ? 'Present' : 'Missing',
+          userRole: userData?.role,
+          headers: {
+            Authorization: token ? 'Bearer [TOKEN]' : 'Missing'
+          }
+        });
+
+        if (!token) {
+          setError('Authentication token is missing. Please login again.');
+          navigate('/login');
+          return;
+        }
+
+        if (userData?.role?.toUpperCase() !== 'ADMIN') {
+          setError('You do not have admin privileges to delete events.');
+          return;
+        }
+
         await adminAPI.deleteEvent(eventId);
+        console.log('Event deleted successfully');
         await fetchEvents(); // Refresh the events list
       } catch (err) {
-        setError('Failed to delete event. Please try again later.');
-        console.error('Error deleting event:', err);
+        console.error('Error deleting event:', {
+          status: err.response?.status,
+          statusText: err.response?.statusText,
+          data: err.response?.data,
+          headers: err.response?.headers
+        });
+
+        if (err.response?.status === 403) {
+          setError('You do not have permission to delete events. Please check your admin privileges.');
+        } else if (err.response?.status === 401) {
+          setError('Your session has expired. Please login again.');
+          navigate('/login');
+        } else {
+          setError('Failed to delete event. Please try again later.');
+        }
       }
     }
   };
@@ -177,6 +227,25 @@ const AdminPage = () => {
             ) : (
               filteredEvents.map(event => (
                 <div key={event.id} className="admin-event-card">
+                  <div className="event-image-container">
+                    {event.imageUrl ? (
+                      <img
+                        src={`http://localhost:8080${event.imageUrl}`}
+                        alt={event.name}
+                        className="event-image"
+                        onError={(e) => {
+                          console.error('Error loading image:', e);
+                          e.target.src = 'https://via.placeholder.com/300x300?text=No+Image';
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src="https://via.placeholder.com/300x300?text=No+Image"
+                        alt="No image available"
+                        className="event-image"
+                      />
+                    )}
+                  </div>
                   <div className="admin-event-content">
                     <div className="admin-event-header">
                       <h3>{event.name}</h3>
@@ -210,13 +279,13 @@ const AdminPage = () => {
                     </div>
                     <div className="admin-event-actions">
                       <button 
-                        className="admin-action-btn edit-btn"
+                        className="admin-event-action-btn edit-btn"
                         onClick={() => handleEditEvent(event.id, event)}
                       >
                         Edit
                       </button>
                       <button 
-                        className="admin-action-btn delete-btn"
+                        className="admin-event-action-btn delete-btn"
                         onClick={() => handleDeleteEvent(event.id)}
                       >
                         Delete

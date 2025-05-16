@@ -13,6 +13,8 @@ const BookedEvents = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateFilter, setDateFilter] = useState('upcoming');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const navigate = useNavigate();
 
   const fetchBookedEvents = async () => {
@@ -128,6 +130,35 @@ const BookedEvents = () => {
     return matchesSearch && matchesCategory && matchesDate;
   });
 
+  const handleCancelBooking = async (eventId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const userDetails = JSON.parse(localStorage.getItem('user'));
+      
+      if (!token || !userDetails) {
+        navigate('/login');
+        return;
+      }
+
+      await axios.post('http://localhost:8080/api/users/cancel-booking', {
+        userId: userDetails.id,
+        eventId: eventId
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      // Refresh the events list
+      fetchBookedEvents();
+      setShowCancelModal(false);
+      setSelectedEvent(null);
+    } catch (err) {
+      console.error('Error canceling booking:', err);
+      setError('Failed to cancel booking. Please try again later.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -221,6 +252,24 @@ const BookedEvents = () => {
                   <div className="booked-flag">
                     <i className="fas fa-check-circle"></i> Booked
                   </div>
+                  <div className="event-image-container">
+                    <div className="image-loading-placeholder">
+                      <div className="loading-spinner"></div>
+                    </div>
+                    <img
+                      src={event.imageUrl ? `http://localhost:8080${event.imageUrl}` : '/placeholder-event.jpg'}
+                      alt={event.name}
+                      className="event-image"
+                      onLoad={(e) => {
+                        e.target.previousSibling.classList.add('hidden');
+                      }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/placeholder-event.jpg';
+                        e.target.previousSibling.classList.add('hidden');
+                      }}
+                    />
+                  </div>
                   <div className="event-details">
                     <h3>{event.name}</h3>
                     <div className="event-info">
@@ -233,6 +282,15 @@ const BookedEvents = () => {
                     <p className="event-description">{event.description}</p>
                     <div className="event-footer">
                       <span className="event-price">${event.price}</span>
+                      <button 
+                        className="cancel-button"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setShowCancelModal(true);
+                        }}
+                      >
+                        Cancel Booking
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -241,6 +299,49 @@ const BookedEvents = () => {
           </div>
         </div>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && selectedEvent && (
+        <div className="modal-overlay">
+          <div className="confirmation-modal">
+            <div className="modal-header">
+              <h2>Cancel Booking</h2>
+              <button className="close-button" onClick={() => {
+                setShowCancelModal(false);
+                setSelectedEvent(null);
+              }}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-content">
+              <p>Are you sure you want to cancel your booking for {selectedEvent.name}?</p>
+              <div className="event-details-confirm">
+                <p><i className="fas fa-calendar"></i> Date: {new Date(selectedEvent.date).toLocaleDateString()}</p>
+                <p><i className="fas fa-clock"></i> Time: {selectedEvent.time}</p>
+                <p><i className="fas fa-map-marker-alt"></i> Location: {selectedEvent.location}</p>
+                <p className="price">Price: ${selectedEvent.price}</p>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="cancel-button"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setSelectedEvent(null);
+                }}
+              >
+                Keep Booking
+              </button>
+              <button 
+                className="confirm-button"
+                onClick={() => handleCancelBooking(selectedEvent.id)}
+              >
+                Confirm Cancellation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="footer">

@@ -143,4 +143,18 @@ public class UserController {
             return ResponseEntity.badRequest().body("Failed to fetch booked events: " + e.getMessage());
         }
     }
+
+    @PostMapping("/cancel-booking")
+    public ResponseEntity<?> cancelBooking(@RequestBody Map<String, Object> cancelRequest) {
+        try {
+            Long userId = Long.parseLong(cancelRequest.get("userId").toString());
+            Long eventId = Long.parseLong(cancelRequest.get("eventId").toString());
+
+            // Call service to cancel booking
+            userService.cancelBooking(userId, eventId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to cancel booking: " + e.getMessage());
+        }
+    }
 } 

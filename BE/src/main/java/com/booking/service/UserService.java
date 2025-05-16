@@ -143,4 +143,29 @@ public class UserService {
         System.out.println("User has booked events: " + bookedEventIds);
         return bookedEventIds;
     }
+
+    @Transactional
+    public void cancelBooking(Long userId, Long eventId) {
+        // Validate user and event exist
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        // Check if user has booked this event
+        if (!user.getBookedEvents().contains(event)) {
+            throw new RuntimeException("You have not booked this event");
+        }
+
+        // Remove event from user's booked events
+        user.getBookedEvents().remove(event);
+        
+        // Increase available tickets
+        event.setAvailableTickets(event.getAvailableTickets() + 1);
+
+        // Save both user and event
+        userRepository.save(user);
+        eventRepository.save(event);
+    }
 } 

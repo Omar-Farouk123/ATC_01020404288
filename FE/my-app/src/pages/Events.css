@@ -91,10 +91,12 @@
 .filters-group {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .category-filter,
-.date-filter {
+.date-filter,
+.price-filter {
   padding: 0.75rem 1rem;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
@@ -104,15 +106,18 @@
   min-width: 200px;
   cursor: pointer;
   transition: all 0.2s;
+  flex: 1;
 }
 
 .category-filter:hover,
-.date-filter:hover {
+.date-filter:hover,
+.price-filter:hover {
   border-color: #4f46e5;
 }
 
 .category-filter:focus,
-.date-filter:focus {
+.date-filter:focus,
+.price-filter:focus {
   outline: none;
   border-color: #4f46e5;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
@@ -221,7 +226,8 @@
   }
 
   .category-filter,
-  .date-filter {
+  .date-filter,
+  .price-filter {
     width: 100%;
   }
 
@@ -282,23 +288,48 @@
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 .event-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.event-image-container {
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 50%;
+  margin: 20px auto;
+  width: 300px;
+  height: 300px;
+}
+
+.event-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.event-image:hover {
+  transform: scale(1.05);
 }
 
 .event-details {
   padding: 1.5rem;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  gap: 0.75rem;
 }
 
 .event-details h3 {
@@ -365,6 +396,22 @@
   font-size: 1.25rem;
   font-weight: 600;
   color: #4f46e5;
+}
+
+.cancel-button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
 }
 
 .book-button {
@@ -443,6 +490,7 @@
   max-width: 500px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
   animation: modalSlideIn 0.3s ease-out;
+  overflow: hidden;
 }
 
 @keyframes modalSlideIn {
@@ -457,24 +505,27 @@
 }
 
 .modal-header {
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
+  color: #ffff;
   justify-content: space-between;
   align-items: center;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #1f2937;
+  color: white;
   font-size: 1.5rem;
   font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .close-button {
   background: none;
   border: none;
-  color: #6b7280;
+  color: white;
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 6px;
@@ -482,34 +533,36 @@
 }
 
 .close-button:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .modal-content {
-  padding: 1.5rem;
+  padding: 1.25rem;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
 }
 
-.modal-content h3 {
-  color: #1f2937;
-  font-size: 1.25rem;
-  margin: 0 0 1.5rem 0;
+.modal-content p {
+  color: #4b5563;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
   text-align: center;
 }
 
 .event-details-confirm {
   background: #f9fafb;
   border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .event-details-confirm p {
-  margin: 0.75rem 0;
+  margin: 0.5rem 0;
   color: #4b5563;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  text-align: left;
 }
 
 .event-details-confirm i {
@@ -550,43 +603,48 @@
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
-.cancel-button {
-  background: #f3f4f6;
-  color: #4b5563;
-  border: none;
+.modal-actions .cancel-button,
+.modal-actions .confirm-button {
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  font-size: 1rem;
+  min-width: 140px;
+  border-radius: 25px;
+  border: none;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.cancel-button:hover {
-  background: #e5e7eb;
+.modal-actions .cancel-button {
+  background: white;
+  color: #4f46e5;
+  border: 2px solid #4f46e5;
 }
 
-.confirm-button {
+.modal-actions .cancel-button:hover {
+  background: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-actions .confirm-button {
   background: #4f46e5;
   color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.confirm-button:hover {
+.modal-actions .confirm-button:hover {
   background: #4338ca;
-}
-
-.confirm-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .events-content {
@@ -724,20 +782,56 @@
   }
 }
 
-.event-image-container {
-  width: 100%;
-  height: 200px;
-  overflow: hidden;
-  border-radius: 8px 8px 0 0;
-}
-
-.event-image {
+.image-loading-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
 }
 
-.event-image:hover {
-  transform: scale(1.05);
+.image-loading-placeholder.hidden {
+  display: none;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.login-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4f46e5;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

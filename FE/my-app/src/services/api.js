@@ -14,8 +14,23 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
+        const userData = JSON.parse(localStorage.getItem('user'));
+        
+        console.log('Request interceptor:', {
+            url: config.url,
+            method: config.method,
+            hasToken: !!token,
+            userRole: userData?.role
+        });
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('Request headers:', {
+                ...config.headers,
+                Authorization: 'Bearer [TOKEN]' // Hide actual token in logs
+            });
+        } else {
+            console.warn('No token found in localStorage');
         }
         return config;
     },
@@ -28,6 +43,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        console.error('API Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            headers: error.response?.headers
+        });
+        
         if (error.response?.status === 401) {
             // Clear auth data and redirect to login
             localStorage.removeItem('token');

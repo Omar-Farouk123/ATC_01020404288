@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/events")
@@ -29,7 +31,10 @@ public class EventController {
         try {
             // Validate date is not in the past
             if (eventDTO.getDate().isBefore(LocalDate.now())) {
-                return ResponseEntity.badRequest().body("Event date cannot be in the past");
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Invalid date",
+                    "message", "Event date cannot be in the past"
+                ));
             }
 
             Event event = new Event();
@@ -47,7 +52,10 @@ public class EventController {
             return ResponseEntity.ok(savedEvent);
         } catch (Exception e) {
             logger.error("Error creating event: ", e);
-            return ResponseEntity.badRequest().body("Error creating event: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Error creating event",
+                "message", e.getMessage()
+            ));
         }
     }
 

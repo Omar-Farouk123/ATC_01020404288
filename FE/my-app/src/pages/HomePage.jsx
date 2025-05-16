@@ -1,8 +1,24 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../pages/HomePage.css';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  const handleSeeEvents = () => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData?.role?.toUpperCase() === 'ADMIN') {
+      // Clear admin session
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('tokenExpiry');
+      navigate('/login');
+    } else {
+      // Allow both authenticated and unauthenticated users to view events
+      navigate('/events');
+    }
+  };
+
   return (
     <div className="container">
       {/* Hero Section */}
@@ -13,9 +29,9 @@ const HomePage = () => {
           <Link to="/login" className="cta-button">
             Get Started
           </Link>
-          <Link to="/events" className="cta-button secondary">
+          <button onClick={handleSeeEvents} className="cta-button secondary">
             See Events
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -71,9 +87,9 @@ const HomePage = () => {
           <Link to="/login" className="cta-button">
             Book Now
           </Link>
-          <Link to="/events" className="cta-button secondary">
+          <button onClick={handleSeeEvents} className="cta-button secondary">
             Browse Events
-          </Link>
+          </button>
         </div>
       </section>
     </div>
