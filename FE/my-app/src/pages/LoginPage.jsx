@@ -191,10 +191,17 @@ const LoginPage = () => {
         }
       }
     } catch (err) {
-      if (err.response?.data?.error === 'Account is not activated yet. Please wait for admin approval.') {
-        setError('Your account is not activated yet. Please wait for admin approval.');
+      // Prefer backend error message if available
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.status === 400) {
+        setError('Invalid credentials');
+      } else if (err.message) {
+        setError(err.message);
       } else {
-        setError(err.response?.data?.error || 'An error occurred. Please try again.');
+        setError('An error occurred. Please try again.');
       }
       console.error('Error:', err);
     } finally {
