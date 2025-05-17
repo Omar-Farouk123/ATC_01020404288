@@ -1,70 +1,72 @@
-# Getting Started with Create React App
+# Event Booking Frontend (React)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the frontend for the Event Booking application, built with React. It provides user and admin interfaces for browsing, booking, and managing events and users.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **User Authentication:**
+  - Login and registration for users.
+  - Hardcoded admin login (email:`admin@gmail.com` /pass:`admin`) to create new user if its ur first launch for the project.
 
-### `npm start`
+- **User Management (Admin):**
+  - Admin can create, edit, enable/disable, and assign roles to users.
+  - Compact, scrollable user edit form with image upload and role selector.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Event Management (Admin):**
+  - Admin can add, edit, and delete events.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Profile Management:**
+  - Admin can update any user profile and upload a profile picture.
 
-### `npm test`
+## Getting Started
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
+- Node.js (v16+ recommended)
+- npm
 
-### `npm run build`
+### Installation
+1. Navigate to the frontend directory:
+   ```sh
+   cd FE/my-app
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Running the App
+Start the development server:
+```sh
+npm start
+```
+The app will run at [http://localhost:3000](http://localhost:3000).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Environment Configuration
+- API endpoints are configured in `src/config.js`.
+- By default, the frontend expects the backend to run at `http://localhost:8080`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Project Structure
+```
+FE/my-app/
+  src/
+    components/      # Reusable UI components (forms, cards, etc.)
+    pages/           # Main pages (Home, Events, Admin, etc.)
+    services/        # API service modules
+    context/         # React context (e.g., Auth)
+    App.js           # Main app routes
+    config.js        # API URL config
+```
 
-### `npm run eject`
+## Admin Login
+- Use the following credentials to access admin features:
+  - **Email:** `admin@gmail.com`
+  - **Password:** `admin`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Notes
+- The UI is responsive and designed for usability.
+- All user and event management features are accessible via the admin panel.
+- For backend setup, see the backend README in the `BE/` directory.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Feel free to customize this README for your deployment or team needs.
