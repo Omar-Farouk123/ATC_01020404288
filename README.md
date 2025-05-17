@@ -26,4 +26,10 @@ This repository contains a full-stack Event Booking application, organized as fo
 - Both FE and BE have their own README files for setup and usage instructions.
 
 ---
+
 This file provides a high-level overview for new developers and maintainers.
+
+### 🔗 More Information
+
+If you'd like to see how this project looks in action without cloning or running the code, I'll be posting a walkthrough and visuals on my [LinkedIn profile](https://www.linkedin.com/in/your-username).  
+Feel free to connect or follow for updates!
