@@ -88,12 +88,22 @@ export const eventsAPI = {
 // Admin API calls
 export const adminAPI = {
     getAllUsers: () => api.get('/users'),
-    updateUserStatus: (userId, statusData) => api.put(`/users/${userId}/status`, statusData),
+    updateUserStatus: (userId, status) => api.put(`/users/${userId}/status`, status),
     createEvent: (eventData) => api.post('/events', eventData),
     updateEvent: (eventId, eventData) => api.put(`/events/${eventId}`, eventData),
     deleteEvent: (eventId) => api.delete(`/events/${eventId}`),
     getEventStats: () => api.get('/admin/stats/events'),
     getUserStats: () => api.get('/admin/stats/users'),
+    deleteUser: (userId) => api.delete(`/users/${userId}`),
+    updateUser: (userId, formData) => {
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        };
+        return api.put(`/users/${userId}`, formData, config);
+    },
     uploadEventImage: async (eventId, formData) => {
         try {
             const response = await axios.post(

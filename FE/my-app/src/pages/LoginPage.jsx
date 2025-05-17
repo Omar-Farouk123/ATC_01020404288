@@ -81,17 +81,28 @@ const LoginPage = () => {
     setSuccess('');
     setIsLoading(true);
 
+    // Hardcoded admin login
+    if (isLogin && formData.email === 'admin@gmail.com' && formData.password === 'admin') {
+      setSuccess('Admin login successful! Redirecting to user creation...');
+      setTimeout(() => {
+        navigate('/new-user'); // Route to user creation form
+      }, 1000);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         // Handle login
         const response = await authAPI.login(formData.email, formData.password);
-        const { token, role, id, email, fullName } = response.data;
+        const { token, role, id, email, fullName, imageUrl } = response.data;
         
         console.log('Login response:', {
           token: token ? 'Present' : 'Missing',
           role,
           id,
-          email
+          email,
+          imageUrl: imageUrl ? 'Present' : 'Missing'
         });
         
         // Set session expiration time (24 hours from now)
@@ -103,7 +114,8 @@ const LoginPage = () => {
           id,
           email,
           fullName,
-          role: role?.toUpperCase() // Ensure role is always uppercase
+          role: role?.toUpperCase(), // Ensure role is always uppercase
+          imageUrl // Include the imageUrl in stored user data
         }));
         localStorage.setItem('tokenExpiry', expiryTime.toString());
         
@@ -134,6 +146,7 @@ const LoginPage = () => {
         formDataToSend.append('password', formData.password);
         formDataToSend.append('phoneNumber', formData.phoneNumber);
         formDataToSend.append('address', formData.address);
+        formDataToSend.append('role', 'USER'); // Always set role as USER for registration
         if (selectedImage) {
           formDataToSend.append('image', selectedImage);
         }
@@ -365,4 +378,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

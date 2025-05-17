@@ -1,22 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 import '../pages/HomePage.css';
 
 const HomePage = () => {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Clear all tokens and user data when homepage loads
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
+  }, []);
+
+  const handleGetStarted = () => {
+    navigate('/login');
+  };
+
   const handleSeeEvents = () => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    if (userData?.role?.toUpperCase() === 'ADMIN') {
-      // Clear admin session
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('tokenExpiry');
-      navigate('/login');
-    } else {
-      // Allow both authenticated and unauthenticated users to view events
-      navigate('/events');
-    }
+    navigate('/events');
   };
 
   return (
@@ -26,9 +28,9 @@ const HomePage = () => {
         <h1>Book Your Perfect Experience</h1>
         <p>Find and book the best services in your area</p>
         <div className="hero-buttons">
-          <Link to="/login" className="cta-button">
+          <button onClick={handleGetStarted} className="cta-button">
             Get Started
-          </Link>
+          </button>
           <button onClick={handleSeeEvents} className="cta-button secondary">
             See Events
           </button>
@@ -84,9 +86,9 @@ const HomePage = () => {
         <h2>Ready to Get Started?</h2>
         <p>Join thousands of satisfied customers today</p>
         <div className="hero-buttons">
-          <Link to="/login" className="cta-button">
+          <button onClick={handleGetStarted} className="cta-button">
             Book Now
-          </Link>
+          </button>
           <button onClick={handleSeeEvents} className="cta-button secondary">
             Browse Events
           </button>

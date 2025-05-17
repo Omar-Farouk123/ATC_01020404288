@@ -26,6 +26,7 @@ public class AuthController {
             @RequestParam("password") String password,
             @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
             @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "role", required = false) String role,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
             User user = new User();
@@ -34,6 +35,7 @@ public class AuthController {
             user.setPassword(password);
             user.setPhoneNumber(phoneNumber != null ? phoneNumber : "");
             user.setAddress(address != null ? address : "");
+            user.setRole(role != null ? User.UserRole.valueOf(role) : User.UserRole.USER);
             
             // Handle image upload
             if (image != null && !image.isEmpty()) {

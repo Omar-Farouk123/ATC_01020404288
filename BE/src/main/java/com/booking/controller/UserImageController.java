@@ -113,7 +113,7 @@ public class UserImageController {
         System.out.println("File size: " + filePath.toFile().length() + " bytes");
 
         // Update user with image URL
-        String imageUrl = "/uploads/users/" + filename;
+        String imageUrl = filename;
         System.out.println("Setting image URL: " + imageUrl);
         
         user.setImageUrl(imageUrl);

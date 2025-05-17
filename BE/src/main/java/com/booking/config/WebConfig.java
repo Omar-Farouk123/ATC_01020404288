@@ -28,55 +28,46 @@ public class WebConfig implements WebMvcConfigurer {
         try {
             // Get the absolute path to the images directory
             String absolutePath = new File("").getAbsolutePath();
-            String imagesDir = absolutePath + "/src/main/resources/static/images/";
-            String uploadsDir = absolutePath + "/src/main/resources/static/uploads/";
+            String uploadsDir = absolutePath + "/uploads/";
             
             System.out.println("=== Resource Handler Configuration ===");
             System.out.println("Absolute Path: " + absolutePath);
-            System.out.println("Images Directory: " + imagesDir);
             System.out.println("Uploads Directory: " + uploadsDir);
             
             // Create directories if they don't exist
-            File imagesDirFile = new File(imagesDir);
             File uploadsDirFile = new File(uploadsDir + "users/");
             File eventsDirFile = new File(uploadsDir + "events/");
             
             System.out.println("Creating directories...");
-            System.out.println("Images directory exists: " + imagesDirFile.exists());
             System.out.println("Users upload directory exists: " + uploadsDirFile.exists());
             System.out.println("Events upload directory exists: " + eventsDirFile.exists());
             
-            imagesDirFile.mkdirs();
             uploadsDirFile.mkdirs();
             eventsDirFile.mkdirs();
             
             System.out.println("After creation:");
-            System.out.println("Images directory exists: " + imagesDirFile.exists());
             System.out.println("Users upload directory exists: " + uploadsDirFile.exists());
             System.out.println("Events upload directory exists: " + eventsDirFile.exists());
             
             // Set directory permissions
-            imagesDirFile.setReadable(true, false);
-            imagesDirFile.setExecutable(true, false);
             uploadsDirFile.setReadable(true, false);
             uploadsDirFile.setExecutable(true, false);
             eventsDirFile.setReadable(true, false);
             eventsDirFile.setExecutable(true, false);
             
             System.out.println("Directory permissions set");
-            System.out.println("Images directory readable: " + imagesDirFile.canRead());
             System.out.println("Users upload directory readable: " + uploadsDirFile.canRead());
             System.out.println("Events upload directory readable: " + eventsDirFile.canRead());
 
             // Serve event images
             registry.addResourceHandler("/api/images/events/**")
-                    .addResourceLocations("file:" + imagesDir)
+                    .addResourceLocations("file:" + uploadsDir + "events/")
                     .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS))
                     .resourceChain(true)
                     .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
 
             // Serve user images
-            registry.addResourceHandler("/uploads/users/**")
+            registry.addResourceHandler("/api/images/users/**")
                     .addResourceLocations("file:" + uploadsDir + "users/")
                     .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS))
                     .resourceChain(true)

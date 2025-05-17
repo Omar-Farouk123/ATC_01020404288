@@ -8,6 +8,7 @@ import AdminPage from './pages/AdminPage';
 import UserManagementPage from './pages/UserManagementPage';
 import LoadingBar from './components/LoadingBar';
 import ProtectedRoute from './components/ProtectedRoute';
+import NewUserForm from './components/NewUserForm';
 import './components/LoadingBar.css';
 import './App.css';
 
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/new-user" element={<NewUserForm onClose={() => {}} onSubmit={() => {}} />} />
           <Route 
             path="/events" 
             element={

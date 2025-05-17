@@ -50,37 +50,67 @@
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
-  background: white;
+  width: 80px;
+  height: 80px;
+  background: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #4f46e5;
-  font-size: 1.1rem;
-  border: 2px solid rgba(79, 70, 229, 0.2);
+  font-size: 2.2rem;
+  border: 3px solid #ffffff;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  transform: scale(1.05);
+  position: relative;
+  outline: none;
+}
+
+.user-avatar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  border-radius: 50%;
+  z-index: 1;
+  border: none;
 }
 
 .user-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: brightness(1.2) contrast(1.1);
+  position: relative;
+  z-index: 2;
+  border: none;
 }
 
 .user-avatar i {
-  font-size: 1.2rem;
+  font-size: 2.2rem;
   color: #4f46e5;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .user-avatar:hover {
-  transform: scale(1.05);
-  background: #f8fafc;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: scale(1.1);
+  background: #ffffff;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  border-color: #ffffff;
+  outline: none;
+}
+
+.user-avatar:focus {
+  outline: none;
+  border-color: #ffffff;
 }
 
 .events-header h1 {
@@ -342,6 +372,7 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  min-height: 500px;
 }
 
 .event-card:hover {
@@ -351,9 +382,13 @@
 
 .event-image-container {
   width: 100%;
-  height: 200px;
+  height: 250px;
   overflow: hidden;
   position: relative;
+  border-radius: 50%;
+  margin: 1rem auto;
+  width: 250px;
+  height: 250px;
 }
 
 .event-image {
@@ -361,6 +396,7 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  border-radius: 50%;
 }
 
 .event-image:hover {
@@ -373,6 +409,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  text-align: center;
 }
 
 .event-details h3 {

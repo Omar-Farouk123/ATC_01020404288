@@ -21,4 +21,5 @@ public class UserRegistrationRequest {
     private String phoneNumber;
     private String address;
     private String imageUrl;
+    private String role = "USER"; // Default role is USER
 } 

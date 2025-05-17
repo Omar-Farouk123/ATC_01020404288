@@ -66,12 +66,64 @@ const Events = () => {
 
   const fetchUserData = async () => {
     try {
-      const userData = authService.getCurrentUser();
+      const userData = JSON.parse(localStorage.getItem('user'));
       if (!userData) {
         navigate('/login');
         return;
       }
       setUser(userData);
+      
+      // Log complete user data to check all attributes
+      console.log('Complete user data:', {
+        id: userData.id,
+        email: userData.email,
+        fullName: userData.fullName,
+        role: userData.role,
+        imageUrl: userData.imageUrl,
+        token: userData.token ? 'exists' : 'missing'
+      });
+      
+      // Fetch user image if available
+      if (userData.id) {
+        try {
+          // Check if imageUrl exists and is valid
+          if (!userData.imageUrl) {
+            console.log('No image URL found for user');
+            setUserImageUrl(null);
+            return;
+          }
+
+          // Extract filename from the full path if needed
+          const imageFilename = userData.imageUrl.split('/').pop();
+          console.log('Attempting to fetch image:', `${API_URL}/api/images/users/${imageFilename}`);
+
+          const response = await axios.get(`${API_URL}/api/images/users/${imageFilename}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Accept': 'image/jpeg'
+            },
+            responseType: 'blob'
+          });
+          
+          if (response.data) {
+            const imageUrl = URL.createObjectURL(response.data);
+            setUserImageUrl(imageUrl);
+            console.log('Successfully loaded user image');
+          }
+        } catch (error) {
+          console.error('Error fetching user image:', {
+            error: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            userData: {
+              id: userData.id,
+              email: userData.email,
+              imageUrl: userData.imageUrl
+            }
+          });
+          setUserImageUrl(null);
+        }
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
       setError('Failed to load user data');
@@ -305,11 +357,11 @@ const Events = () => {
               <div className="user-avatar">
                 {userImageUrl ? (
                   <img 
-                    src={`${API_URL}${userImageUrl}`}
+                    src={userImageUrl}
                     alt="User avatar"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = '/default-avatar.png';
+                      setUserImageUrl(null);
                     }}
                   />
                 ) : (

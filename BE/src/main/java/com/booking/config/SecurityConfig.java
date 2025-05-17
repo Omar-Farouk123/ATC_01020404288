@@ -18,6 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authorization.AuthorizationDecision;
 
 import java.util.Arrays;
 
@@ -65,6 +66,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/events/**").hasRole("ADMIN")
                 .requestMatchers("/api/categories/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/users/{id}").access((authentication, context) -> {
+                    // Allow admin to update any user
+                    if (authentication.get().getAuthorities().stream()
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                        return new AuthorizationDecision(true);
+                    }
+                    // Allow users to update only their own profile
+                    String userId = context.getVariables().get("id");
+                    String userEmail = authentication.get().getName();
+                    return new AuthorizationDecision(
+                        userDetailsService.loadUserByUsername(userEmail).getUsername().equals(userId)
+                    );
+                })
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

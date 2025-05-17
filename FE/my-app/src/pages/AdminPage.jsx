@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FaCog, FaUsers, FaChartBar, FaSignOutAlt, FaUser, FaHome } from 'react-icons/fa';
 import { eventsAPI, adminAPI } from '../services/api';
+import { API_URL } from '../config';
 import AddEventForm from '../components/AddEventForm';
 import EditEventForm from '../components/EditEventForm';
 import './AdminPage.css';
@@ -157,16 +158,19 @@ const AdminPage = () => {
               <div className="user-avatar">
                 {user.imageUrl ? (
                   <img 
-                    src={`http://localhost:8080${user.imageUrl}`}
+                    src={`${API_URL}/api/images/users/${user.imageUrl}`}
                     alt={user.fullName}
+                    loading="lazy"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = 'https://via.placeholder.com/40x40?text=U';
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
                     }}
                   />
-                ) : (
-                  <i className="fas fa-user"></i>
-                )}
+                ) : null}
+                <div className="avatar-fallback" style={{ display: user.imageUrl ? 'none' : 'flex' }}>
+                  {user.fullName.split(' ').map(n => n[0]).join('')}
+                </div>
               </div>
             </div>
           )}

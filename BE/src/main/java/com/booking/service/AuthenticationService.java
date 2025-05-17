@@ -33,7 +33,7 @@ public class AuthenticationService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    private static final String UPLOAD_DIR = "src/main/resources/static/uploads/users/";
+    private static final String UPLOAD_DIR = "uploads/users/";
 
     public String saveUserImage(MultipartFile image) throws IOException {
         System.out.println("=== Saving User Image ===");
@@ -75,7 +75,7 @@ public class AuthenticationService {
         System.out.println("File size: " + destFile.length() + " bytes");
         
         // Return the URL path that will be used to access the image
-        String imageUrl = "/uploads/users/" + filename;
+        String imageUrl = filename;
         System.out.println("Returning image URL: " + imageUrl);
         System.out.println("=========================");
         
@@ -91,7 +91,7 @@ public class AuthenticationService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(User.UserRole.USER);
+        user.setRole(request.getRole());
         user.setEnabled(true);
         user.setPhoneNumber(request.getPhoneNumber());
         user.setAddress(request.getAddress());

@@ -10,7 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,15 +36,22 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationRequest request) {
+    public ResponseEntity<?> registerUser(
+            @RequestParam("fullName") String fullName,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
             User user = new User();
-            user.setFullName(request.getFullName());
-            user.setEmail(request.getEmail());
-            user.setPassword(request.getPassword());
-            user.setPhoneNumber(request.getPhoneNumber());
-            user.setAddress(request.getAddress());
-            user.setRole(User.UserRole.USER);
+            user.setFullName(fullName);
+            user.setEmail(email);
+            user.setPassword(password);
+            user.setPhoneNumber(phoneNumber != null ? phoneNumber : "");
+            user.setAddress(address != null ? address : "");
+            user.setRole(role != null ? User.UserRole.valueOf(role) : User.UserRole.USER);
             user.setEnabled(false);
             
             User registeredUser = userService.registerUser(user);
@@ -71,10 +82,46 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
-        user.setId(id);
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long id,
+            @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "enabled", required = false) Boolean enabled,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            User updatedUser = userService.updateUser(user);
+            User existingUser = userService.getUserById(id)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            // Update fields if provided
+            if (fullName != null) existingUser.setFullName(fullName);
+            if (email != null) existingUser.setEmail(email);
+            if (phoneNumber != null) existingUser.setPhoneNumber(phoneNumber);
+            if (address != null) existingUser.setAddress(address);
+            
+            // Only admin can update these fields
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            
+            if (isAdmin) {
+                if (role != null) existingUser.setRole(User.UserRole.valueOf(role));
+                if (enabled != null) existingUser.setEnabled(enabled);
+            }
+
+            // Handle image upload if provided
+            if (image != null && !image.isEmpty()) {
+                try {
+                    String imageUrl = authenticationService.saveUserImage(image);
+                    existingUser.setImageUrl(imageUrl);
+                } catch (IOException e) {
+                    return ResponseEntity.badRequest().body("Failed to save user image: " + e.getMessage());
+                }
+            }
+
+            User updatedUser = userService.updateUser(existingUser);
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
