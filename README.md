@@ -60,5 +60,5 @@ This file provides a high-level overview for new developers and maintainers.
 
 ### 🔗 More Information
 
-If you'd like to see how this project looks in action without cloning or running the code, I'll be posting a walkthrough and visuals on my [LinkedIn profile](https://www.linkedin.com/in/omar-farouk-b9276b274/).  
+I'll be posting a walkthrough on my [LinkedIn profile](https://www.linkedin.com/in/omar-farouk-b9276b274/).  
 Feel free to connect or follow for updates!
