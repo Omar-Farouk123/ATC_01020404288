@@ -26,4 +26,34 @@ This repository contains a full-stack Event Booking application, organized as fo
 - Both FE and BE have their own README files for setup and usage instructions.
 
 ---
+
+## Screenshots
+
+Here are some pages from the final website:
+
+![Home Page](./photos/Home%20Page.PNG)
+*Home Page*
+
+![Login Page](./photos/login.PNG)
+*Login Page*
+
+![Register Page](./photos/register.PNG)
+*Register Page*
+
+![User Page](./photos/user%20page.PNG)
+*User Dashboard*
+
+![Admin Page](./photos/admin%20page.PNG)
+*Admin Dashboard*
+
+![Booked Events](./photos/booked%20events.PNG)
+*Booked Events*
+
+![Edit User](./photos/Edit%20user.PNG)
+*Edit User Modal*
+
+![Edit Form](./photos/edit%20form.PNG)
+*Edit User Form (Compact)*
+
+---
 This file provides a high-level overview for new developers and maintainers.
